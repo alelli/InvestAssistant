@@ -1,0 +1,100 @@
+﻿@using Invest;
+@model ChartData
+@{
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+<h2>@Model.Secid</h2>
+<h2>@ViewBag.Date</h2>
+@*<h2>@ViewBag.Root</h2>*@
+<canvas id="stocksCanvas" width="800" height="450"></canvas>
+@section Scripts{
+    <script>
+        document.addEventListener('DOMContentLoaded', init, false);
+
+        let data, canvas, secid;
+        let dates = [];
+        let prices = [];
+
+        async function init() {
+          canvas = document.getElementById("stocksCanvas");
+          secid = '@Model.Secid';
+
+          let fullDates = [];
+          fullDates = @(Html.Raw(Json.Serialize(Model.Dates)));
+          prices = @(Html.Raw(Json.Serialize(Model.Prices)));
+          formatDates(fullDates);
+          drawChart();
+        }
+
+        function formatDates(fullDates){
+          fullDates.forEach(c => {
+            dates.push(new Date(c).toLocaleDateString());
+          });
+        }
+
+        function drawChart(){
+          var config = {
+            type: 'line',
+            data: {
+              labels: dates,
+              datasets: [
+                  {
+                    label: "Prices",
+                    data: prices,
+                    fill: false,
+                    borderColor: 'rgba(255, 0, 0, 0.2)',
+                    borderWidth: 2,
+                    backgroundColor: 'rgba(0, 0, 0, 1)',
+                    pointBackgroundColor: 'rgba(255, 0, 0, 0.5)',
+                    pointBorderColor: 'rgba(0, 0, 255, 0.5)',
+                    pointBorderWidth: 2,
+                    pointHoverBorderColor: 'rgba(145, 255, 0, 0.7)',
+                    pointHoverBorderWidth: 10,
+                    lineTension: 0
+                  }
+                ]
+              },
+            options:{
+              responsive: false,
+              legend: {
+                display: false,
+              },
+              title: {
+                display: true,
+                text: secid
+              },
+              tooltips: {
+      	        backgroundColor: 'rgba(10, 10, 100, 0.7)',
+                displayColors: false,
+                bodyFontSize: 14,
+                // bodyColor: 'rgba(255, 0, 0, 1)',
+                callbacks: {
+                  label: function(tooltipItems, data) { 
+                    return tooltipItems.yLabel + ' RUB';
+                  }
+                }
+              },
+              scales: {
+                xAxes: [{
+                  display: true,
+                  ticks: {
+                    backdropColor: 'rgba(255, 0, 0, 1)',
+                    callback: function(value, index, ticks) {
+                      return index % 4 === 0 || index == ticks.length - 1  ? value : '';
+                    }
+                  },
+                }],
+                yAxes: [{
+                  display: true,
+          
+                }]
+              },
+            }
+          }
+  
+  
+          window.chart = new Chart(canvas, config);
+        }
+    </script>
+}

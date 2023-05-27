@@ -1,0 +1,116 @@
+﻿@model int
+@{
+    
+}
+<h2>@ViewBag.Date</h2>
+            <form method="post">
+    <table id="catTable" class="securities" align="center" border="1">
+        <caption>Котировки на текущую дату</caption>
+        <thead>
+            <tr>
+                <th width="200px" data-sort='secid'>Код</th>
+                <th width="150px" data-sort='shortname'>Наименование</th>
+                <th data-sort='value'>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ><td colspan="5"><i>Loading...</i></td></tr>
+        </tbody>
+    </table>
+             </form>
+    <button id="prevButton">Previous</button>
+    <button name="1" id="toPageButton" data-page="1">1</button>
+    <section id="pagination">
+        
+    </section>
+    <button id="nextButton">Next</button>
+
+    @section Scripts{
+        <script>
+            document.addEventListener('DOMContentLoaded', init, false);
+
+            let data, table, sortCol, pagesSection;
+            let sortAsc = false;
+            const pageSize = 25;
+            let curPage = 1;
+
+
+            async function init() {
+
+                // Select the table (well, tbody)
+                table = document.querySelector('#catTable tbody');
+                let url = '';
+                if ('@Model' == '1'){
+                    url = 'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST';
+                }
+                else{
+                    url = 'https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST';
+                }
+                //alert(url);
+                let resp = await fetch(url);
+                if (resp.ok) {
+                    data = await resp.json();
+                    setPagination();
+                    renderTable();
+                }
+                else {
+                    alert("request is invalid");
+                }
+
+                function setPagination() {
+                    pagesSection = document.querySelector('#pagination');
+                    let pageCount = Math.ceil(data.securities.data.length / pageSize);
+                    let result = '';
+                    for (let i = 2; i <= pageCount; i++) {
+                        // buttons.add();
+                        result += `<button id="toPageButton" name="${i}" listener="toPage(${i})" data-page="${i}">${i}
+                         </button>`;
+                    }
+                    pagesSection.innerHTML = result;
+                }
+                document.querySelector('#nextButton').addEventListener('click', nextPage, false);
+                document.querySelector('#prevButton').addEventListener('click', previousPage, false);
+
+            }
+
+            function renderTable() {
+                let result = '';
+                let k = 0;
+                data.securities.data.filter((row, index) => {
+                    let start = (curPage - 1) * pageSize;
+                    let end = curPage * pageSize;
+                    if (index >= start && index < end) return true;
+                }).forEach(c => {
+                    result += `<tr align="center">
+                     <td><a href="/Stock/Shares/${c[0]}">${c[0]}</a></td>
+                     <td>${c[1]}</td>
+                     <td>${data.marketdata.data[k][0]}</td>
+                     </tr>`;
+                    k++;
+                });
+                table.innerHTML = result;
+
+                //alert("table is rendered");
+            }
+
+            function previousPage() {
+                if (curPage > 1) {
+                    curPage--;
+                    renderTable();
+
+                    alert("prev page");
+                }
+            }
+
+            function nextPage() {
+                if ((curPage * pageSize) < data.securities.data.length) {
+                    curPage++;
+                    renderTable();
+
+                    alert("next page");
+                }
+            }
+
+            
+        </script>
+    }
