@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Invest.Models;
-
-namespace Invest.Data
+﻿namespace Invest.Data
 {
     public class DataContext : DbContext
     {
