@@ -1,0 +1,17 @@
+table.forma {
+    /*   background-color: #fff; */
+    /*   padding: 20px 50px 50px 50px; */
+    margin: 50px;
+}
+
+table.forma .textBox {
+    width: 250px;
+    text-align: center;
+    font: small-caps 18px serif;
+}
+
+table.forma button {
+    margin-top: 30px;
+    padding: 2px 25px;
+    font: small-caps 18px serif;
+}

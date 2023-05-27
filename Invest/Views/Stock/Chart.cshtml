@@ -1,13 +1,19 @@
-﻿@using Invest;
-@model ChartData
+﻿@model ChartData
 @{
 }
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+<link rel="stylesheet" href="~/css/chart.css" asp-append-version="true" />
 
 <h2>@Model.Secid</h2>
 <h2>@ViewBag.Date</h2>
 @*<h2>@ViewBag.Root</h2>*@
-<canvas id="stocksCanvas" width="800" height="450"></canvas>
+<div class="chart" align="center">
+    <canvas id="stocksCanvas" width="650" height="450"></canvas>
+</div>
+<div class="emitent_info">
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
 @section Scripts{
     <script>
         document.addEventListener('DOMContentLoaded', init, false);
@@ -15,6 +21,7 @@
         let data, canvas, secid;
         let dates = [];
         let prices = [];
+        //let forecastedPrices = [];
 
         async function init() {
           canvas = document.getElementById("stocksCanvas");
@@ -43,15 +50,16 @@
                     label: "Prices",
                     data: prices,
                     fill: false,
-                    borderColor: 'rgba(255, 0, 0, 0.2)',
+                    borderColor: 'rgba(0, 0, 255, 0.4)',
                     borderWidth: 2,
-                    backgroundColor: 'rgba(0, 0, 0, 1)',
-                    pointBackgroundColor: 'rgba(255, 0, 0, 0.5)',
-                    pointBorderColor: 'rgba(0, 0, 255, 0.5)',
-                    pointBorderWidth: 2,
-                    pointHoverBorderColor: 'rgba(145, 255, 0, 0.7)',
-                    pointHoverBorderWidth: 10,
-                    lineTension: 0
+                    backgroundColor: 'rgba(0, 0, 255, 1)',
+                    //pointBackgroundColor: 'rgba(255, 0, 0, 0.5)',
+                    pointBorderColor: 'rgba(255, 255, 255, 1)',
+                    pointBorderWidth: 1,
+                    pointHoverBackgroundColor: 'rgba(255, 100, 0, 0.8)',
+                    pointHoverBorderColor: 'rgba(255, 100, 0, 0.8)',
+                    pointHoverBorderWidth: 0,
+                    lineTension: 0,
                   }
                 ]
               },
@@ -92,8 +100,6 @@
               },
             }
           }
-  
-  
           window.chart = new Chart(canvas, config);
         }
     </script>

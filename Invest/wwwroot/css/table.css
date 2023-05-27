@@ -1,0 +1,33 @@
+table.securities {
+    width: 500px;
+    background-color: white;
+    border: 1px solid #2F4F4F;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+table.securities th {
+    font-size: 10px;
+}
+
+.pages {
+    display: flex;
+    list-style: none;
+    width: 500px;
+    justify-content: center;
+}
+
+.pages button {
+    font: italic small-caps bold 14px/2 serif;
+    color: #000;
+    padding: 1px 10px;
+    background: #DCDCDC;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    text-decoration: underline;
+    margin-top: 5px;
+}
+
+.pages button:hover {
+    text-decoration: none;
+}

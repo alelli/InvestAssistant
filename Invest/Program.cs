@@ -2,12 +2,12 @@ global using Invest.Data;
 global using Invest.Models;
 global using Microsoft.EntityFrameworkCore;
 
+
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddControllers();
 
 builder.Services.AddDbContext<DataContext>(options =>
 {
@@ -29,6 +29,7 @@ var app = builder.Build();
 
 //app.UseCors(myAllowSpecificOrigins);
 
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -38,12 +39,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseRouting();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Stock}/{action=Shares}/{id?}");
-
-app.MapControllers();
 
 app.Run();
