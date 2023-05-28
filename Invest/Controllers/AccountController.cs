@@ -17,21 +17,21 @@ namespace Invest.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register() => View(new RegisterViewModel());
+        public IActionResult SignUp() => View(new RegisterViewModel());
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> SignUp(RegisterViewModel model)
         {
-            if (model.Login == null || model.Name == null || model.Password == null || model.PasswordConfirm == null)
+            if (model.Email == null || model.Name == null || model.Password == null || model.PasswordConfirm == null)
             {
-                ViewData["Error"] = "Не все обязательные поля заполнены";
+                ViewData["Error"] = "Не все поля заполнены";
                 return View(model);
             }
 
-            var foundUser = GetUserByLogin(model.Login);//await _context.Users.FindAsync(model.Login);// (u => u.Login == user.Login);
+            var foundUser = GetUserByEmail(model.Email);//await _context.Users.FindAsync(model.Login);// (u => u.Login == user.Login);
             if (foundUser != null)
             {
-                ViewData["Error"] = "Пользователь с этим логином уже существует";
+                ViewData["Error"] = "Пользователь с этой почтой уже существует";
                 return View(model);
             }
 
@@ -44,17 +44,20 @@ namespace Invest.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            var claim = Authenticate(newUser); //BaseResponse<ClaimsIdentity>
-            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claim));
+            var claimsIdentity = Authenticate(newUser); //BaseResponse<ClaimsIdentity>
+            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
+
+            ViewData["Cookie"] = "authorized";
 
             return RedirectToAction("Profile");
         }
 
+        [NonAction]
         private ClaimsIdentity Authenticate(User user)
         {
             var claims = new List<Claim>
             {
-                //new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login),
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
                 new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role.ToString())
             };
             return new ClaimsIdentity(claims, "ApplicationCookie",
@@ -88,7 +91,7 @@ namespace Invest.Controllers
             }
             else
             {
-                User user = GetUserByLogin(login);
+                User user = GetUserByEmail(login);
                 if (user == null)
                 {
                     ViewData["Error"] = "not found";
@@ -99,8 +102,10 @@ namespace Invest.Controllers
                 }
                 else
                 {
-                    var claim = Authenticate(user);
-                    await Request.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claim));
+                    var claimsIdentity = Authenticate(user);
+                    await Request.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
+                    ViewData["Cookie"] = "authorized";
 
                     return RedirectToAction("Profile");
                 }
@@ -116,7 +121,7 @@ namespace Invest.Controllers
             return user;
         }
 
-        private User GetUserByLogin(string email)
+        private User GetUserByEmail(string email)
         {
             //User user = users.Find(x => x.Login == login);
             //User user = await _context.Users.FindAsync(id);
@@ -130,8 +135,9 @@ namespace Invest.Controllers
 
         public async Task<IActionResult> Logout()
         {
+            ViewData["Cookie"] = null;
             await HttpContext.SignOutAsync("Cookies");
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Shares", "Stock");
         }
     }
 }

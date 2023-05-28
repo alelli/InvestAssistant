@@ -3,6 +3,7 @@
     ViewData["Title"] = "Регистрация";
 }
 
+<link rel="stylesheet" href="~/css/sign.css" asp-append-version="true"/>
 <div width="100%" align="center">
 <form method="POST">
     <table class="forma" border="0">
@@ -13,7 +14,7 @@
     </tr>
     <tr>
         <td><h4>Логин:</h4></td>
-        <td><input class="textBox" type="text" name="Login" value="@Model[0]"></td>
+        <td><input class="textBox" type="text" name="Login" value="@Model.Email"></td>
     </tr>
     <tr>
         <td><h4 class="textlabel">Имя:</h4></td>

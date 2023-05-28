@@ -15,3 +15,7 @@ table.forma button {
     padding: 2px 25px;
     font: small-caps 18px serif;
 }
+
+footer {
+    position: absolute;
+}

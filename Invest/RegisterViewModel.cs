@@ -4,8 +4,8 @@ namespace Invest
 {
     public class RegisterViewModel
     {
-        [Required(ErrorMessage = "Укажите логин")]
-        public string Login { get; set; }
+        [Required(ErrorMessage = "Укажите Почту")]
+        public string Email { get; set; }
 
         [Required(ErrorMessage = "Укажите имя")]
         public string Name { get; set; }

@@ -3,6 +3,7 @@
     ViewData["Title"] = "Авторизация";
 }
 
+<link rel="stylesheet" href="~/css/sign.css" asp-append-version="true"/>
 <div width="100%" align="center">
     <form method="POST">
         <table class="forma" border="0">
@@ -17,12 +18,12 @@
         </tr>
         <tr>
             <td><h4 class="textlabel">Пароль:</h4></td>
-            <td> <input class="textBox" size="15" type="password" name="Password" value="@Model.Password"></td>
+            <td> <input class="textBox" size="15" type="password" name="Password" value="@Model[1]"></td>
         </tr>
         <tr>
             <td colspan="2" align="center">
             <button class="submit" type="submit" value="1" name="send">Войти</button>
-            <p>Нет аккаунта? <a href="@Url.Action("Login")">Зарегистрируйтесь</a></p>
+            <p>Нет аккаунта? <a href="@Url.Action("SignUp")">Зарегистрируйтесь</a></p>
             </td>
         </tr>
         <tr height="70">
