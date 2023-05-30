@@ -1,0 +1,56 @@
+﻿@model List<UserStock>
+@{
+    ViewData["Title"] = "Мой портфель";
+    HttpClient _httpClient = new HttpClient();
+
+    //string url = "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.json=extended&iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,LAST,LASTCHANGEPRCNT";
+    //MarketDataRoot marketData = await _httpClient.GetFromJsonAsync<MarketDataRoot>(url);
+
+    double? currentPrice = 0, difference = 0, lastChange = 0; string sign = "+"; string color = "#11c700";
+}
+<link rel="stylesheet" href="~/css/table.css" asp-append-version="true"/>
+<div align="center" width="100%">
+    @if (Model != null) {
+        <form name="customer_data" method="POST">
+            <table id="catTable" class="securities" align="center" border="1">
+                <caption><h3>Мой портфель</h3></caption>
+                <thead>
+                    <tr height="35">
+                        <th width="200" data-sort='0'>Наименование</th>
+                        <th width="120" data-sort='1'>Текущая цена</th>
+                        <th width="120" data-sort='2'>Цена покупки</th>
+                        <th width="120" data-sort='3'>Изменение</th>
+                        <th width="120" data-sort='4'>Последнее изменение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        @*currentPrice = marketData.Root[0].marketdata[i].LAST;
+                        difference = currentPrice / Model[i].PurchasePrice * 100;
+                        lastChange = marketData.Root[0].marketdata[i].LASTCHANGEPRCNT;*@
+                        if (lastChange < 0)
+                        {
+                            color = "red";
+                            sign = "";
+                        }
+                        else
+                        {
+                            color = "#11c700";
+                            sign = "+";
+                        }
+
+                        <tr align="center">
+                        <td>@Model[i].SecId</td>
+                        <td>@currentPrice</td>
+                        <td>@Model[i].PurchasePrice</td>
+                        <td style="color: @color;">@sign@difference%</td>
+                        <td style="color: @color;">@sign@lastChange%</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </form>
+    }
+</div>
+

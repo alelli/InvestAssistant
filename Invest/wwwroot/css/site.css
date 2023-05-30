@@ -7,7 +7,7 @@ html,
 body {
     height: 100%;
     font: small-caps 16px/2 serif;
-    background-color: #DCDCDC;
+    background-color: white;
 }
 
 header {
@@ -16,12 +16,15 @@ header {
     width: 100%;
     margin: 0px;
     margin-left: 0px;
-    background-color: white;
+    background-color: #f2f2f2;
     text-align: left;
+    border-bottom: 2px #dbd9d9 solid;
+    border-radius: 0px 0px 20px 20px;
 }
 
 .content {
     padding-bottom: 50px;
+    margin-top: 50px;
 }
 
 nav.menu ul {
@@ -55,8 +58,10 @@ footer {
     left: 0;
     bottom: 0;
     width: 100%;
-    background-color: white;
+    background-color: #ebebeb;
     height: 45px;
+    border-top: 3px #dbd9d9 solid;
+    border-radius: 20px 20px 0px 0px;
 }
 
 nav.footer_menu {

@@ -3,15 +3,35 @@
 }
 <link rel="stylesheet" href="~/css/chart.css" asp-append-version="true" />
 
-<h2>@Model.Secid</h2>
-<h2>@ViewBag.Date</h2>
+@*<h2>@Model.Secid</h2>
+<h2>@ViewBag.Date</h2>*@
 @*<h2>@ViewBag.Root</h2>*@
-<div class="chart" align="center">
-    <canvas id="stocksCanvas" width="650" height="450"></canvas>
-</div>
-<div class="emitent_info">
 
-</div>
+<table width="100%" border="0">
+    <tr>
+        <td valign="top">
+            <div align="center" class="emitent_info">
+                <h2>500 RUB</h2>
+                <font size="2" color="green">+0.75% </font>
+                <font size="2" style="color: orange"> Держать</font>
+                <form method="post">
+                    <button name="addStock" type="submit">Добавить актив</button>
+                <a id="adding" data-add="0" style="color: #f70a1a" href="#"> − </a>
+                <font id="stockAmount" size="3">@*<input id="stockAmount" name="stockAmount" value="1" max="100" size="1" align="center"/>*@ 1 </font>
+                <a id="adding" data-add="1" href="#"> + </a>
+                </form>
+            </div>
+        </td>
+        <td>
+            <div align="right" width="100%" style="margin-right: 70px;">
+              <div class="chart" align="center">
+                <canvas id="stocksCanvas" width="800" height="500"></canvas>
+              </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
 
 @section Scripts{
@@ -21,7 +41,7 @@
         let data, canvas, secid;
         let dates = [];
         let prices = [];
-        //let forecastedPrices = [];
+        let forecastedPrices = [];
 
         async function init() {
           canvas = document.getElementById("stocksCanvas");
@@ -30,6 +50,7 @@
           let fullDates = [];
           fullDates = @(Html.Raw(Json.Serialize(Model.Dates)));
           prices = @(Html.Raw(Json.Serialize(Model.Prices)));
+          forecastedPrices = @(Html.Raw(Json.Serialize(Model.ForecastedPrices)));
           formatDates(fullDates);
           drawChart();
         }
@@ -47,7 +68,6 @@
               labels: dates,
               datasets: [
                   {
-                    label: "Prices",
                     data: prices,
                     fill: false,
                     borderColor: 'rgba(0, 0, 255, 0.4)',
@@ -60,7 +80,17 @@
                     pointHoverBorderColor: 'rgba(255, 100, 0, 0.8)',
                     pointHoverBorderWidth: 0,
                     lineTension: 0,
-                  }
+                  },
+                {
+                    data: forecastedPrices,
+                    fill: false,
+                    borderColor: 'rgba(0, 200, 0, 0.5)',
+                    borderWidth: 1,
+                    backgroundColor: 'rgba(0, 200, 0, 0.5)',
+                    lineTension: 0,
+                    pointHoverBackgroundColor: 'rgba(255, 100, 0, 0.8)',
+                    pointHoverBorderColor: 'rgba(255, 100, 0, 0.8)',
+                }
                 ]
               },
             options:{
@@ -95,12 +125,31 @@
                 }],
                 yAxes: [{
                   display: true,
-          
+                  position: "right",
+                  color: 'red',
                 }]
               },
             }
           }
           window.chart = new Chart(canvas, config);
+        }
+
+        document.querySelectorAll('#adding').forEach(t => {
+            t.addEventListener('click', changeAmount, false);
+        });
+
+        let amount = 1;
+        function changeAmount(e) {
+          if (e.target.dataset.add == 0 && amount > 1){
+            amount--;
+            document.querySelector("#stockAmount").value = amount;
+            document.querySelector("#stockAmount").innerHTML = amount;
+          }
+          else if (e.target.dataset.add == 1) {
+            amount++;
+            document.querySelector("#stockAmount").value = amount;
+            document.querySelector("#stockAmount").innerHTML = amount;
+          }
         }
     </script>
 }

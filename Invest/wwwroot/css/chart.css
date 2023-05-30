@@ -1,8 +1,40 @@
 .chart {
     background-color: white;
-    width: 700px;
-    heigth: 470px;
+    width: 850px;
+    height: 550px;
 }
 
 .emitent_info {
+    display: fixed;
+    margin: 20px;
+    margin-left: 70px;
+    background: #f2f2f2;
+    width: 300px;
+    height: 170px;
+    border-right: 2px #dbd9d9 solid;
+    border-bottom: 4px #dbd9d9 solid;
+    border-radius: 10px 10px 30px 10px;
+}
+
+.emitent_info h2 {
+    color: #2F4F4F;
+    margin-top: 25px;
+    font-size: 30px;
+}
+
+.emitent_info button {
+    margin-top: 30px;
+    padding: 5px 25px;
+    color: white;
+    font: small-caps 19px serif;
+    margin-right: 10px;
+    background: #4d7f7f;
+    border: 0px #2F4F4F solid;
+    border-radius: 10px;
+}
+
+.emitent_info a {
+    font-size: 25px;
+    margin: 5px;
+    text-decoration: none;
 }

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Microsoft.ML;
 using Microsoft.ML.Transforms.TimeSeries;
 using Microsoft.ML.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Invest.Controllers
 {
@@ -10,13 +11,16 @@ namespace Invest.Controllers
     {
         private readonly ILogger<StockController> _logger;
         private static HttpClient _httpClient = new HttpClient();
+        private readonly DataContext _context;
 
-        public StockController(ILogger<StockController> logger)
+        public StockController(ILogger<StockController> logger, DataContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
-        public async Task<IActionResult> Shares(string id) 
+        //[HttpGet]
+        public async Task<IActionResult> Shares(string id, int stockAmount) 
         {
             if (id != null)
             {
@@ -46,9 +50,26 @@ namespace Invest.Controllers
                     {
                         lastDate = lastDate.AddDays(1);
                         chartData.Dates.Add(lastDate);
-                        chartData.Prices.Add(item);
+                        chartData.ForecastedPrices.Add(Math.Round(item, 2));
                     }
                     // end of method
+
+                    int price = 333; // ПОЛУЧИТЬ
+                    if (stockAmount != 0)
+                    {
+                        var identityEmail = User.Identity.Name;
+                        var dbUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == identityEmail);
+                        UserStock newStock = new UserStock()
+                        {
+                            User = dbUser,
+                            SecId = id,
+                            Quantity = stockAmount,
+                            PurchasePrice = price * stockAmount
+                        };
+
+                        _context.UserStocks.Add(newStock);
+                        await _context.SaveChangesAsync();
+                    }
 
                     chartData.Secid = id;
                     return View("Chart", chartData);
@@ -58,6 +79,45 @@ namespace Invest.Controllers
             return View("StockList", 1);
         }
 
+        public async Task<IActionResult> Bonds(string id)
+        {
+            if (id != null)
+            {
+                string urlDate = $"https://iss.moex.com/iss/history/engines/stock/markets/bonds/boards/TQCB/securities/{id}.json?iss.meta=off&history.columns=TRADEDATE&from=2023-02-01";
+                var urlPrice = $"https://iss.moex.com/iss/history/engines/stock/markets/bonds/boards/TQCB/securities/{id}.json?iss.meta=off&history.columns=OPEN&from=2023-02-01";
+
+                var jsonDates = await _httpClient.GetFromJsonAsync<Root1>(urlDate);
+                var jsonPrices = await _httpClient.GetFromJsonAsync<Root2>(urlPrice);
+                int length = jsonDates.history.data.Count;
+                var dates = new List<DateTime>();
+                var prices = new List<double>();
+                var stocks = new List<Stock>();
+                for (int i = 0; i < length; i++)
+                {
+                    dates.Add(DateTime.ParseExact(jsonDates.history.data[i][0], "yyyy-MM-dd",
+                                       System.Globalization.CultureInfo.InvariantCulture));
+                    prices.Add(jsonPrices.history.data[i][0]);
+                    stocks.Add(new Stock(id, dates[i], (float)prices[i]));
+                }
+                DateTime lastDate = dates[length - 1];
+
+
+                var prediction = ForecastStocks(stocks).ForecastPrices;
+
+                foreach (double item in prediction)
+                {
+                    prices.Add((double)item);
+                    lastDate = lastDate.AddDays(1);
+                    dates.Add(lastDate);
+                }
+
+                ChartData chartData = new ChartData() { Secid = id, Dates = dates, Prices = prices };
+                return View("Chart", chartData);
+            }
+            return View("StockList", 2);
+        }
+
+        [NonAction]
         public async Task<ChartData> GetDataFromUrlsAsync(string urlDate, string urlPrice)
         {
             var jsonDates = await _httpClient.GetFromJsonAsync<Root1>(urlDate);
@@ -69,12 +129,14 @@ namespace Invest.Controllers
 
                 var dates = new List<DateTime>(); // отдельно даты и цены - для построения графика
                 var prices = new List<double>();
+                var forecastedPrices = new List<double>();
                 for (int i = 0; i < length; i++)
                 {
                     dates.Add(DateTime.ParseExact(jsonDates.history.data[i][0], "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
-                    prices.Add(jsonPrices.history.data[i][0]);
+                    prices.Add(jsonPrices.history.data[i][0]); 
+                    forecastedPrices.Add(jsonPrices.history.data[i][0]); 
                 }
-                return new ChartData { Dates = dates, Prices = prices };
+                return new ChartData { Dates = dates, Prices = prices, ForecastedPrices = forecastedPrices };
             }
             return new ChartData();
         }
@@ -87,12 +149,14 @@ namespace Invest.Controllers
                 var length = jsonData.history.Count;
                 var dates = new List<DateTime>(); // отдельно даты и цены - для построения графика
                 var prices = new List<double>();
+                var forecastedPrices = new List<double>();
                 for (int i = 0; i < length; i++)
                 {
                     dates.Add(DateTime.ParseExact(jsonData.history[i].TRADEDATE, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
                     prices.Add(jsonData.history[i].OPEN);
+                    forecastedPrices.Add(jsonData.history[i].OPEN);
                 }
-                return new ChartData { Dates = dates, Prices = prices };
+                return new ChartData { Dates = dates, Prices = prices, ForecastedPrices = forecastedPrices };
             }
             return new ChartData();
         }

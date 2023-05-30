@@ -10,9 +10,10 @@
           <caption>Котировки на текущую дату</caption>
           <thead>
             <tr>
-              <th width="70px" data-sort='0'>Код</th>
-              <th width="120px" data-sort='1'>Наименование</th>
-              <th data-sort='2'>Последняя цена</th>
+              <th width="100px" data-sort='0'>Код</th>
+              <th data-sort='1'>Наименование</th>
+              <th width="120px" data-sort='2'>Последняя цена</th>
+              <th width="120px" data-sort='3'>Посленее изменение</th>
             </tr>
           </thead>
           <tbody>
@@ -33,7 +34,7 @@
 
             let data, table, pagesSection, curPageButton;
             let sortAsc = true;
-            const pageSize = 20;
+            const pageSize = 15;
             const pagesCount = 8;
             let sortCol = 0;
             let curPage = 1;
@@ -42,10 +43,10 @@
                 table = document.querySelector('#catTable tbody');
                 let url = '';
                 if ('@Model' == '1'){
-                    url = 'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST';
+                    url = 'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTCHANGEPRCNT';
                 }
                 else {
-                    url = 'https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST';
+                    url = 'https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTCHANGEPRCNT';
                 }
                 //alert(url);
                 let resp = await fetch(url);
@@ -83,22 +84,31 @@
 
             function renderTable() {
                 let result = '';
-                let start; 
+                let start;
+                let color;
+                let sign;
                 data.securities.data.filter((row, index) => {
-                start = (curPage-1)*pageSize;
-                let end =curPage*pageSize;
-                if(index >= start && index < end) return true;
-                }).forEach(c => {
-                result += `<tr align="center">
-                    <td><a href="/Stock/Shares/${c[0]}">${c[0]}</a></td>
-                    <td>${c[1]}</td>
-                    <td>${data.marketdata.data[start][0]}</td>
-                    </tr>`;
-                start++;
+                    start = (curPage-1)*pageSize;
+                    let end =curPage*pageSize;
+                    if(index >= start && index < end) return true;
+                    }).forEach(c => {
+                        if (data.marketdata.data[start][1] > 0.0) {
+                            color = "#11c700";
+                            sign = "+";
+                        }
+                        else {
+                            color = "red";
+                            sign = "";
+                        }
+                        result += `<tr align="center">
+                            <td><a href="/Stock/Shares/${c[0]}">${c[0]}</a></td>
+                            <td>${c[1]}</td>
+                            <td>${data.marketdata.data[start][0]}</td>
+                            <td style="color: ${color};">${sign}${data.marketdata.data[start][1]}%</td>
+                            </tr>`;
+                        start++;
                 });
                 table.innerHTML = result;
-
-                //alert("table is rendered");
             }
 
             document.querySelectorAll('#catTable thead tr th').forEach(t => {

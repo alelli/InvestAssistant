@@ -10,6 +10,8 @@ namespace Invest
         [Required(ErrorMessage = "Укажите имя")]
         public string Name { get; set; }
 
+        public string CurrentPassword { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "Укажите пароль")]
         [DataType(DataType.Password)]
         [MinLength(6, ErrorMessage = "Пароль должен быть не короче 3 символов")]

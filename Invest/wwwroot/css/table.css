@@ -1,5 +1,5 @@
 table.securities {
-    width: 500px;
+    width: 650px;
     background-color: white;
     border: 1px solid #2F4F4F;
     table-layout: fixed;
@@ -13,7 +13,7 @@ table.securities th {
 .pages {
     display: flex;
     list-style: none;
-    width: 500px;
+    width: 650px;
     justify-content: center;
 }
 
@@ -21,7 +21,7 @@ table.securities th {
     font: italic small-caps bold 14px/2 serif;
     color: #000;
     padding: 1px 10px;
-    background: #DCDCDC;
+    background: white;
     border: 1px solid transparent;
     border-radius: 10px;
     text-decoration: underline;

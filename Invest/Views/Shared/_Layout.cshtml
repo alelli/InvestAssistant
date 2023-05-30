@@ -13,8 +13,8 @@
             <ul>
 		        <li><a href="/Stock/Shares">Акции</a></li>
 		        <li><a href="/Stock/Bonds">Облигации</a></li>
-                @if (ViewData["Cookie"] != null) {
-                    <li><a href="/Account/Profile">Мой портфель</a></li>
+                @if (User.Identity.Name != null) {
+                    <li><a href="/Account/Settings">Мой портфель</a></li>
                 }
                 else {
                 <li><a href="/Account/Login">Войти</a></li>

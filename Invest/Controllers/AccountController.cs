@@ -37,6 +37,7 @@ namespace Invest.Controllers
 
             User newUser = new User()
             {
+                Email = model.Email, // добавлено
                 Name = model.Name,
                 Role = Role.User,
                 Password = HashPassword(model.Password)
@@ -44,21 +45,19 @@ namespace Invest.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            var claimsIdentity = Authenticate(newUser); //BaseResponse<ClaimsIdentity>
+            var claimsIdentity = AuthenticateByEmail(newUser.Email); //BaseResponse<ClaimsIdentity>
             await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
 
-            ViewData["Cookie"] = "authorized";
-
-            return RedirectToAction("Profile");
+            return RedirectToAction("Settings");
         }
 
         [NonAction]
-        private ClaimsIdentity Authenticate(User user)
+        private ClaimsIdentity AuthenticateByEmail(string email)
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
-                new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role.ToString())
+                new Claim(ClaimsIdentity.DefaultNameClaimType, email),
+                //new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role.ToString())
             };
             return new ClaimsIdentity(claims, "ApplicationCookie",
                 ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType); //?
@@ -102,17 +101,17 @@ namespace Invest.Controllers
                 }
                 else
                 {
-                    var claimsIdentity = Authenticate(user);
+                    var claimsIdentity = AuthenticateByEmail(user.Email);
                     await Request.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
-                    ViewData["Cookie"] = "authorized";
 
-                    return RedirectToAction("Profile");
+                    return RedirectToAction("Settings");
                 }
             }
             return View(new object[] { login, password });
         }
 
+        [NonAction]
         private User GetUserById(int id)
         {
             //User user = users.Find(x => x.Id == id);
@@ -121,6 +120,7 @@ namespace Invest.Controllers
             return user;
         }
 
+        [NonAction]
         private User GetUserByEmail(string email)
         {
             //User user = users.Find(x => x.Login == login);
@@ -130,14 +130,73 @@ namespace Invest.Controllers
             return user;
         }
 
-        [HttpGet]
-        public IActionResult Profile() => View();
+        [Authorize]
+        public async Task<IActionResult> Settings(RegisterViewModel model)
+        {
+            var identityEmail = User.Identity.Name;
+            User dbUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == identityEmail);
+            //var userId = dbUser.Id;
 
+            if (model.Email == null)
+            {
+                return View(new RegisterViewModel() { Email = dbUser.Email, Name = dbUser.Name });
+            }
+            if (model.Email != dbUser.Email) 
+            {
+                dbUser.Email = model.Email;
+
+                await HttpContext.SignOutAsync("Cookies");
+                var claimsIdentity = AuthenticateByEmail(model.Email);
+                await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
+            }
+            if (model.Name != dbUser.Name)
+            {
+                dbUser.Name = model.Name;
+            }
+            if (model.Password != null)
+            {
+                ViewData["Color"] = "red";
+                if (model.CurrentPassword == null || model.PasswordConfirm == null)
+                {
+                    ViewData["Error"] = "Не все поля для изменения пароля заполнены";
+                    return View(model);
+                }
+                if (model.CurrentPassword != dbUser.Password)
+                {
+                    ViewData["Error"] = "Текущий пароль введен неверно";
+                    return View(model);
+                }
+                if (model.Password != model.PasswordConfirm)
+                {
+                    ViewData["Error"] = "Пароли не совпадают";
+                    return View(model);
+                }
+                dbUser.Password = model.Password;
+            }
+            await _context.SaveChangesAsync();
+            ViewData["Error"] = "Данные обновлены";
+            ViewData["Color"] = "black";
+
+            return View(model);
+        }
+
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
-            ViewData["Cookie"] = null;
             await HttpContext.SignOutAsync("Cookies");
             return RedirectToAction("Shares", "Stock");
+        }
+
+
+        [Authorize]
+        public async Task<IActionResult> Portfolio()
+        {
+            var identityEmail = User.Identity.Name;
+            var dbUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == identityEmail);
+            var stocks = await _context.UserStocks
+                .Where(u => u.UserId == dbUser.Id)
+                .ToListAsync();
+            return View(stocks);
         }
     }
 }
