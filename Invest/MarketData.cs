@@ -1,19 +1,23 @@
 ﻿namespace Invest
 {
-    public class MarketDataRoot
+    public class MarketDataRoot1
     {
-        public Marketdata marketdata { get; set; }
+        public MarketData1 marketdata { get; set; }
     }
-    public class Marketdata
+    public class MarketData1
     {
         public List<string> columns { get; set; }
-        public List<List<double>> data { get; set; }
+        public List<List<string>> data { get; set; }
     }
 
-    public class Info
+    public class MarketDataRoot2
     {
-        public Charsetinfo charsetinfo { get; set; }
-        public List<MarketData> marketdata { get; set; }
+        public MarketData2 marketdata { get; set; }
+    }
+    public class MarketData2
+    {
+        public List<string> columns { get; set; }
+        public List<List<double?>> data { get; set; }
     }
 
     public class MarketData

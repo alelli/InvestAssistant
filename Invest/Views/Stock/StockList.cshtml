@@ -1,4 +1,4 @@
-﻿@model int
+﻿@model string
 @{
     ViewData["Title"] = "Список";
 }
@@ -10,7 +10,7 @@
           <caption>Котировки на текущую дату</caption>
           <thead>
             <tr>
-              <th width="100px" data-sort='0'>Код</th>
+              <th width="130px" data-sort='0'>Код</th>
               <th data-sort='1'>Наименование</th>
               <th width="120px" data-sort='2'>Последняя цена</th>
               <th width="120px" data-sort='3'>Посленее изменение</th>
@@ -41,14 +41,8 @@
 
             async function init() {
                 table = document.querySelector('#catTable tbody');
-                let url = '';
-                if ('@Model' == '1'){
-                    url = 'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTCHANGEPRCNT';
-                }
-                else {
-                    url = 'https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTCHANGEPRCNT';
-                }
-                //alert(url);
+                let market = '@Model';
+                url = `https://iss.moex.com/iss/engines/stock/markets/${market}/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTCHANGEPRCNT`;
                 let resp = await fetch(url);
                 if (resp.ok) {
                     data = await resp.json();
@@ -58,6 +52,9 @@
                 else {
                     alert("request is invalid");
                 }
+                document.querySelectorAll('#catTable thead tr th').forEach(t => {
+                  t.addEventListener('click', sort, false);
+                });
             }
 
             function setPagination() {
@@ -92,7 +89,7 @@
                     let end =curPage*pageSize;
                     if(index >= start && index < end) return true;
                     }).forEach(c => {
-                        if (data.marketdata.data[start][1] > 0.0) {
+                        if (data.marketdata.data[start][1] > 0) {
                             color = "#11c700";
                             sign = "+";
                         }
@@ -111,9 +108,6 @@
                 table.innerHTML = result;
             }
 
-            document.querySelectorAll('#catTable thead tr th').forEach(t => {
-              t.addEventListener('click', sort, false);
-            });
 
             function sort(e) {
               let thisSort = e.target.dataset.sort;
@@ -153,7 +147,6 @@
                     curPage--;
                     renderTable();
                     circleCurPage(curPage);
-                    alert("prev page");
                 }
             }
 
@@ -162,7 +155,6 @@
                     curPage++;
                     renderTable();
                     circleCurPage(curPage);
-                    alert("next page");
                 }
             }
 

@@ -24,14 +24,19 @@ namespace Invest.Controllers
         {
             if (model.Email == null || model.Name == null || model.Password == null || model.PasswordConfirm == null)
             {
-                ViewData["Error"] = "Не все поля заполнены";
+                ViewData["Error"] = "Не все поля заполнены!";
+                return View(model);
+            }
+            if (model.Password != model.PasswordConfirm)
+            {
+                ViewData["Error"] = "Пароли не совпадают!";
                 return View(model);
             }
 
             var foundUser = GetUserByEmail(model.Email);//await _context.Users.FindAsync(model.Login);// (u => u.Login == user.Login);
             if (foundUser != null)
             {
-                ViewData["Error"] = "Пользователь с этой почтой уже существует";
+                ViewData["Error"] = "Пользователь с данной почтой уже существует!";
                 return View(model);
             }
 
@@ -82,33 +87,27 @@ namespace Invest.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string login, string password)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            if (login == null || password == null)
+            if (email == null || password == null)
             {
-                ViewData["Error"] = "fill empty fields";
+                ViewData["Error"] = "Не все поля заполнены!";
+                return View(new object[] { email, password });
             }
-            else
+            User user = GetUserByEmail(email);
+            if (user == null)
             {
-                User user = GetUserByEmail(login);
-                if (user == null)
-                {
-                    ViewData["Error"] = "not found";
-                }
-                else if (HashPassword(password) != user.Password)
-                {
-                    ViewData["Error"] = "wrong pass";
-                }
-                else
-                {
-                    var claimsIdentity = AuthenticateByEmail(user.Email);
-                    await Request.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-
-
-                    return RedirectToAction("Settings");
-                }
+                ViewData["Error"] = "Пользователя с данной почтой не существует!";
+                return View(new object[] { email, password });
             }
-            return View(new object[] { login, password });
+            if (HashPassword(password) != user.Password)
+            {
+                ViewData["Error"] = "Неверный пароль!";
+                return View(new object[] { email, password });
+            }
+            var claimsIdentity = AuthenticateByEmail(user.Email);
+            await Request.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+            return RedirectToAction("Settings");
         }
 
         [NonAction]

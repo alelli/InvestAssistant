@@ -1,26 +1,40 @@
 ﻿@model ChartData
 @{
+    string enabled = "disabled", title = "Для добавления актива в портфель необходимо войти в аккаутн";
+    if (User.Identity.Name != null)
+    {
+        enabled = "enabled";
+        title = "Добавить актив в портфель";
+    }
 }
 <link rel="stylesheet" href="~/css/chart.css" asp-append-version="true" />
 
-@*<h2>@Model.Secid</h2>
-<h2>@ViewBag.Date</h2>*@
+<h2>@Model.Secid</h2>
+<h2>@ViewBag.Info f</h2>
 @*<h2>@ViewBag.Root</h2>*@
 
 <table width="100%" border="0">
     <tr>
         <td valign="top">
-            <div align="center" class="emitent_info">
-                <h2>500 RUB</h2>
-                <font size="2" color="green">+0.75% </font>
-                <font size="2" style="color: orange"> Держать</font>
-                <form method="post">
-                    <button name="addStock" type="submit">Добавить актив</button>
-                <a id="adding" data-add="0" style="color: #f70a1a" href="#"> − </a>
-                <font id="stockAmount" size="3">@*<input id="stockAmount" name="stockAmount" value="1" max="100" size="1" align="center"/>*@ 1 </font>
-                <a id="adding" data-add="1" href="#"> + </a>
-                </form>
-            </div>
+            <form method="post">
+                <div align="center" class="emitent_info">
+                    <h3>SECID: <input id="secid" name="SecId" value="" class="read" size="5" readonly/></h3>
+                    <h3>SECNAME: <input id="name" name="SecName" value="" class="read" readonly/></h3>
+                    <h2><input id="purchasePrice" name="PurchasePrice" value="" class="read" size="5" readonly/> RUB</h2>
+
+                    <font size="2" color="green">+0.75% </font>
+                    <font size="2" style="color: orange"> Держать</font>
+                
+                    <button name="addStock" type="submit" @enabled title="@title">Добавить актив</button>
+                    <a id="adding" data-add="-1" style="color: #f70a1a"> − </a>
+                    <font size="3">
+                        <input id="stockAmount" name="Quantity" value="1" class="write" type="number" max="100" size="1" align="center"/>
+                    </font>
+                    <a id="adding" data-add="1"> + </a>
+                
+                </div>
+                
+            </form>
         </td>
         <td>
             <div align="right" width="100%" style="margin-right: 70px;">
@@ -32,42 +46,63 @@
     </tr>
 </table>
 
+            <h2 id="check">asd</h2>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
 
 @section Scripts{
     <script>
         document.addEventListener('DOMContentLoaded', init, false);
 
-        let data, canvas, secid;
+        let canvas, secid;
         let dates = [];
         let prices = [];
         let forecastedPrices = [];
+        let check = document.querySelector('#check');
 
         async function init() {
-          canvas = document.getElementById("stocksCanvas");
-          secid = '@Model.Secid';
+            canvas = document.getElementById("stocksCanvas");
+            secid = '@Model.Secid';
+            setStockData();
 
-          let fullDates = [];
-          fullDates = @(Html.Raw(Json.Serialize(Model.Dates)));
-          prices = @(Html.Raw(Json.Serialize(Model.Prices)));
-          forecastedPrices = @(Html.Raw(Json.Serialize(Model.ForecastedPrices)));
-          formatDates(fullDates);
-          drawChart();
+            let fullDates = [];
+            fullDates = @(Html.Raw(Json.Serialize(Model.Dates)));
+            prices = @(Html.Raw(Json.Serialize(Model.Prices)));
+            forecastedPrices = @(Html.Raw(Json.Serialize(Model.ForecastedPrices)));
+            formatDates(fullDates);
+            drawChart();
+            //alert(prices); alert(forecastedPrices);
+        }
+
+        async function setStockData(){
+            let resp = await fetch('https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.json=extended&iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=SECID,LAST,LASTCHANGEPRCNT');
+            data = await resp.json();
+            data[1].securities.forEach(row => {
+                if (row.SECID == secid) {
+                    document.querySelector("#secid").value = row.SECID;
+                    document.querySelector("#name").value = row.SHORTNAME;
+                }
+            });
+            data[1].marketdata.forEach(row => {
+                if (row.SECID == secid) {
+                    document.querySelector("#purchasePrice").value = row.LAST;
+                }
+            });
+            check.innerHTML = document.querySelector("#purchasePrice").value;
         }
 
         function formatDates(fullDates){
-          fullDates.forEach(c => {
+            fullDates.forEach(c => {
             dates.push(new Date(c).toLocaleDateString());
-          });
+            });
         }
 
         function drawChart(){
-          var config = {
+            var config = {
             type: 'line',
             data: {
-              labels: dates,
-              datasets: [
-                  {
+                labels: dates,
+                datasets: [
+                {
                     data: prices,
                     fill: false,
                     borderColor: 'rgba(0, 0, 255, 0.4)',
@@ -80,7 +115,7 @@
                     pointHoverBorderColor: 'rgba(255, 100, 0, 0.8)',
                     pointHoverBorderWidth: 0,
                     lineTension: 0,
-                  },
+                },
                 {
                     data: forecastedPrices,
                     fill: false,
@@ -92,46 +127,46 @@
                     pointHoverBorderColor: 'rgba(255, 100, 0, 0.8)',
                 }
                 ]
-              },
+            },
             options:{
-              responsive: false,
-              legend: {
-                display: false,
-              },
-              title: {
-                display: true,
-                text: secid
-              },
-              tooltips: {
+                responsive: false,
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: secid
+                },
+                tooltips: {
       	        backgroundColor: 'rgba(10, 10, 100, 0.7)',
                 displayColors: false,
                 bodyFontSize: 14,
                 // bodyColor: 'rgba(255, 0, 0, 1)',
                 callbacks: {
-                  label: function(tooltipItems, data) { 
+                    label: function(tooltipItems, data) { 
                     return tooltipItems.yLabel + ' RUB';
-                  }
+                    }
                 }
-              },
-              scales: {
+                },
+                scales: {
                 xAxes: [{
-                  display: true,
-                  ticks: {
+                    display: true,
+                    ticks: {
                     backdropColor: 'rgba(255, 0, 0, 1)',
                     callback: function(value, index, ticks) {
-                      return index % 4 === 0 || index == ticks.length - 1  ? value : '';
+                        return index % 4 === 0 || index == ticks.length - 1  ? value : '';
                     }
-                  },
+                    },
                 }],
                 yAxes: [{
-                  display: true,
-                  position: "right",
-                  color: 'red',
+                    display: true,
+                    position: "right",
+                    color: 'red',
                 }]
-              },
+                },
             }
-          }
-          window.chart = new Chart(canvas, config);
+            }
+            window.chart = new Chart(canvas, config);
         }
 
         document.querySelectorAll('#adding').forEach(t => {
@@ -140,15 +175,13 @@
 
         let amount = 1;
         function changeAmount(e) {
-          if (e.target.dataset.add == 0 && amount > 1){
+          if (e.target.dataset.add == -1 && amount > 1){
             amount--;
             document.querySelector("#stockAmount").value = amount;
-            document.querySelector("#stockAmount").innerHTML = amount;
           }
           else if (e.target.dataset.add == 1) {
             amount++;
             document.querySelector("#stockAmount").value = amount;
-            document.querySelector("#stockAmount").innerHTML = amount;
           }
         }
     </script>
