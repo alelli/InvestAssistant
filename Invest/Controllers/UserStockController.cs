@@ -69,7 +69,7 @@ namespace Invest.Controllers
         }
 
         [HttpDelete("{userId}, {secId}")]
-        public async Task<ActionResult<List<UserStock>>> DeleteUser(int userId, string secId)
+        public async Task<ActionResult<List<UserStock>>> DeleteUserStock(int userId, string secId)
         {
             var dbStock = await _context.UserStocks.FindAsync(userId, secId);
             if (dbStock == null)

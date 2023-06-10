@@ -50,7 +50,7 @@ namespace Invest.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            var claimsIdentity = AuthenticateByEmail(newUser.Email); //BaseResponse<ClaimsIdentity>
+            var claimsIdentity = AuthenticateByEmail(newUser.Email);
             await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
 
             return RedirectToAction("Settings");

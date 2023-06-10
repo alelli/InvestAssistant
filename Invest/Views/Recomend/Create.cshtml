@@ -1,0 +1,74 @@
+﻿@model RecomendModel
+@{
+    ViewData["Title"] = "Собрать портфель";
+}
+<link rel="stylesheet" href="~/css/table.css" asp-append-version="true" />
+<h1>@ViewData["Error"]</h1>
+<form method="post">
+        <div class="params" align="center" width="100%">
+          <h2>Подбор портфеля</h2>
+          <p>
+            Сумма инвестирования: <input name="investSum" class="short" value="0" type="number"/><br/>
+            Период инвестирования: <input name="months" class="short" value="12" type="number"/> месяцев<br/>
+            Соотношение активов:<br/><br/>
+      <p>
+      <table class="ratio" border="1">
+        <tr align="center">
+            <td width="100"><h5>Акции</h5>
+                <div class="input_container">
+                    <input id="shares" name="sharesPercent" readonly class="short percent" value="50" width="50"/>
+                </div>
+            </td>
+            <td width="350px">
+                <div class="input_conteiner">
+                    <input class="slider" id="slider" type="range" min="0" max="100" step="5" value="50" oninput="sliderSize()">
+                </div>
+            </td>
+            <td width="100"><h5>Облигации</h5>
+                <input id="bonds" name="bondsPercent" readonly class="short percent" type="text" value="50"/>
+            </td>
+
+        </tr>
+      </table>
+      </p>
+    <button type="submit" name="setPortfolio" value="1">Сформировать</button>
+  </div>
+  </form>
+<br/>
+@if (Model.Prediction != null)
+{
+    <div class="recomend_result" id="recoment_table">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Последняя цена</th>
+                    <th>Последнее изменение</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Prediction)
+                {
+                <tr>
+                    <td>
+                        @p.Key
+                    </td>
+                    <td>
+                        @p.Value
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+<script>
+    
+    function sliderSize() {
+      let shares = document.getElementById("shares");
+      let bonds = document.getElementById("bonds");
+      let slider = document.getElementById("slider");
+      shares.value = 100 - slider.value;// + "%";
+      bonds.value = slider.value;// + "%";
+    }
+</script>

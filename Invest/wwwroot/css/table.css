@@ -31,3 +31,15 @@ table.securities th {
 .pages button:hover {
     text-decoration: none;
 }
+
+
+.slider {
+    width: 300px;
+}
+
+input.short {
+    width: 55px;
+}
+.input_conteiner {
+    text-align: center;
+}

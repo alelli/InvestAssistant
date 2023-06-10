@@ -43,32 +43,30 @@
     {
         public Securities securities { get; set; }
     }
-    public class Root1
-    {
-        public History1 history { get; set; }
-    }
-    public class Root2
-    {
-        public History2 history { get; set; }
-    }
-
-    [Serializable]
     public class Securities
     {
         public List<string> columns { get; set; }
         public List<List<string>> data { get; set; }
     }
 
-    public class History1 //DATE
+    public class Root1
+    {
+        public History1 history { get; set; }
+    }
+    public class History1
     {
         public List<string> columns { get; set; }
         public List<List<string>> data { get; set; }
     }
 
-    public class History2 //PRICE
+    public class Root2
+    {
+        public History2 history { get; set; }
+    }
+    public class History2
     {
         public List<string> columns { get; set; }
-        public List<List<double>> data { get; set; }
+        public List<List<double?>> data { get; set; }
     }
 
 }
