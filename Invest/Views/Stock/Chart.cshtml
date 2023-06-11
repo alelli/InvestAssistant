@@ -1,6 +1,7 @@
 ﻿@model ChartData
 @{
-    string enabled = "disabled", title = "Для добавления актива в портфель необходимо войти в аккаутн";
+    ViewData["Title"] = Model.SecId;
+    string enabled = "disabled", title = "Для добавления актива в портфель необходимо войти в аккаунт";
     if (User.Identity.Name != null)
     {
         enabled = "enabled";
@@ -8,27 +9,22 @@
     }
 }
 <link rel="stylesheet" href="~/css/chart.css" asp-append-version="true" />
-
-<h2>@Model.Secid</h2>
-<h2>@ViewBag.Info f</h2>
-@*<h2>@ViewBag.Root</h2>*@
-
 <table width="100%" border="0">
     <tr>
         <td valign="top">
             <form method="post">
                 <div align="center" class="emitent_info">
-                    <h3>SECID: <input id="secid" name="SecId" value="" class="read" size="5" readonly/></h3>
-                    <h3>SECNAME: <input id="name" name="SecName" value="" class="read" readonly/></h3>
-                    <h2><input id="purchasePrice" name="PurchasePrice" value="" class="read" size="5" readonly/> RUB</h2>
+                    <h3><input name="secId" value="@Model.SecId" class="read" readonly/></h3>
+                    <h3><input name="secName" value="@Model.SecName" class="read" readonly/></h3>
+                    <h2><input name="lastPrice" value="@Model.LastPrice" class="read" size="5" readonly/> RUB</h2>
 
-                    <font size="2" color="green">+0.75% </font>
+                    <font size="2" color="green">@Model.LastChange</font>
                     <font size="2" style="color: orange"> Держать</font>
                 
                     <button name="addStock" type="submit" @enabled title="@title">Добавить актив</button>
                     <a id="adding" data-add="-1" style="color: #f70a1a"> − </a>
                     <font size="3">
-                        <input id="stockAmount" name="Quantity" value="1" class="write" type="number" max="100" size="1" align="center"/>
+                        <input id="stockAmount" name="amount" value="@Model.Amount" class="write" type="number" min="1" max="100" size="1" align="center"/>
                     </font>
                     <a id="adding" data-add="1"> + </a>
                 
@@ -46,9 +42,11 @@
     </tr>
 </table>
 
-            <h2 id="check">asd</h2>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+@*<h2>@Model.Secid</h2>*@
+<h2>Стоимость акции: @ViewBag.Info</h2>
+@*<h2 id="check">asd</h2>*@
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
 @section Scripts{
     <script>
         document.addEventListener('DOMContentLoaded', init, false);
@@ -61,8 +59,7 @@
 
         async function init() {
             canvas = document.getElementById("stocksCanvas");
-            secid = '@Model.Secid';
-            setStockData();
+            secid = '@Model.SecId';
 
             let fullDates = [];
             fullDates = @(Html.Raw(Json.Serialize(Model.Dates)));
@@ -70,23 +67,6 @@
             forecastedPrices = @(Html.Raw(Json.Serialize(Model.ForecastedPrices)));
             formatDates(fullDates);
             drawChart();
-        }
-
-        async function setStockData(){
-            let resp = await fetch('https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.json=extended&iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=SECID,LAST,LASTCHANGEPRCNT');
-            data = await resp.json();
-            data[1].securities.forEach(row => {
-                if (row.SECID == secid) {
-                    document.querySelector("#secid").value = row.SECID;
-                    document.querySelector("#name").value = row.SHORTNAME;
-                }
-            });
-            data[1].marketdata.forEach(row => {
-                if (row.SECID == secid) {
-                    document.querySelector("#purchasePrice").value = row.LAST;
-                }
-            });
-            check.innerHTML = document.querySelector("#purchasePrice").value;
         }
 
         function formatDates(fullDates){

@@ -1,6 +1,6 @@
 ﻿namespace Invest
 {
-    public class MarketDataRoot1
+    public class MarketDataRoot1 // заменить на stringStaticData
     {
         public MarketData1 marketdata { get; set; }
     }
@@ -10,20 +10,23 @@
         public List<List<string>> data { get; set; }
     }
 
-    public class MarketDataRoot2
+    public class MarketData
     {
-        public MarketData2 marketdata { get; set; }
+        public DoubleMarketData marketdata { get; set; }
     }
-    public class MarketData2
+    public class DoubleMarketData
     {
         public List<string> columns { get; set; }
         public List<List<double?>> data { get; set; }
     }
 
-    public class MarketData
+    public class StringStaticData // можно заменить на Root+MarketData+Securities
     {
-        public string SECID { get; set; }
-        public double? LAST { get; set; }
-        public double LASTCHANGEPRCNT { get; set; }
+        public Securities securities { get; set; }
+    }
+    public class Securities
+    {
+        public List<string> columns { get; set; }
+        public List<List<string>> data { get; set; }
     }
 }

@@ -47,17 +47,19 @@ namespace Invest.Controllers
                 stringCurrentDate = $"{currentDate.Year}-{currentDate.Month}-{currentDate.Day}";
             var actualPrices = await StockController
                 .GetPricesAsync(secid, market, newStartDate, stringCurrentDate);
-            var actualDates = await StockController
-                .GetDatesAsync(secid, market, newStartDate, stringCurrentDate);
-
-            var actualStocks = new List<Stock>();
-            for (int i = 0; i < actualDates.Count && i < actualPrices.Count; i++)
+            if (actualPrices.Count > 0)
             {
-                actualStocks.Add(new Stock(actualDates[i], (float)actualPrices[i]));
-            }
-            //float[] errors = 
+                var actualDates = await StockController
+                    .GetDatesAsync(secid, market, newStartDate, stringCurrentDate);
 
-            return Ok(ForecastStocks(stocksToPredict, actualStocks)); //$"MAE: {errors[0]}\nRMSE: {errors[1]}"
+                var actualStocks = new List<Stock>();
+                for (int i = 0; i < actualDates.Count && i < actualPrices.Count; i++)
+                {
+                    actualStocks.Add(new Stock(actualDates[i], (float)actualPrices[i]));
+                }
+                return Ok(ForecastStocks(stocksToPredict, actualStocks));
+            }
+            return BadRequest("Stocks is null");
         }
 
         private static string ForecastStocks(List<Stock> stocksToPredict, List<Stock> actualStocks) //StockPrediction?
@@ -73,9 +75,7 @@ namespace Invest.Controllers
                 seriesLength: 30,
                 trainSize: stocksToPredict.Count,
                 horizon: actualStocks.Count,
-                confidenceLevel: 0.95f,
-                confidenceUpperBoundColumn: "UpperBoundPrices",
-                confidenceLowerBoundColumn: "LowerBoundPrices");
+                confidenceLevel: 0.95f);
 
             var forecaster = model.Fit(dataToPredict);
 

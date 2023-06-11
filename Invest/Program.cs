@@ -30,16 +30,14 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Stock}/{action=Shares}/{id?}");
 
-//app.Map("/Account/Profile", [Authorize] () => "");
+app.UseCors(
+    options => options
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    );
 
-//app.UseCors(
-//    options => options
-//    .AllowAnyOrigin()
-//    .AllowAnyMethod()
-//    .AllowAnyHeader()
-//    );
-
-//app.UseCors(myAllowSpecificOrigins);
+app.UseCors(myAllowSpecificOrigins);
 
 
 if (app.Environment.IsDevelopment())

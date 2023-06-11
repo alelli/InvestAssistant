@@ -19,51 +19,24 @@
     public class StockPrediction
     {
         public float[] ForecastedPrices { get; set; }
-        public float[] LowerBoundPrices { get; set; }
-        public float[] UpperBoundPrices { get; set; }
     }
 
-    public class Charsetinfo
-    {
-        public string name { get; set; }
-    }
 
-    public class History
+    public class StringHistoryData
     {
-        public string TRADEDATE { get; set; }
-        public double OPEN { get; set; }
+        public StringHistory history { get; set; }
     }
-
-    public class Root3
-    {
-        public Charsetinfo charsetinfo { get; set; }
-        public List<History> history { get; set; }
-    }
-    public class Root
-    {
-        public Securities securities { get; set; }
-    }
-    public class Securities
+    public class StringHistory
     {
         public List<string> columns { get; set; }
         public List<List<string>> data { get; set; }
     }
 
-    public class Root1
+    public class DoubleHistoryData
     {
-        public History1 history { get; set; }
+        public DoubleHistory history { get; set; }
     }
-    public class History1
-    {
-        public List<string> columns { get; set; }
-        public List<List<string>> data { get; set; }
-    }
-
-    public class Root2
-    {
-        public History2 history { get; set; }
-    }
-    public class History2
+    public class DoubleHistory
     {
         public List<string> columns { get; set; }
         public List<List<double?>> data { get; set; }

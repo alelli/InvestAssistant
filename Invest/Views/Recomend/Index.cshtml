@@ -1,71 +1,51 @@
 ﻿@model RecomendModel
 @{
-    ViewData["Title"] = "Собрать портфель";
-    string addEnabled = "disabled",
-        title = "Для добавления актива в портфель необходимо войти в аккаунт";
-    @if (User.Identity.Name != null)
-    {
-        addEnabled = "enabled";
-        title = "Добавить актив в портфель";
-    }
+    ViewData["Title"] = "Подбор портфеля";
 }
 <link rel="stylesheet" href="~/css/table.css" asp-append-version="true" />
-
-<div class="params" align="center" width="100%">
+<div align="center" width="100%">
+    <h2>Подбор портфеля</h2>
     <form method="post">
-        <h2>Подбор портфеля</h2>
-        
         <table class="params" border="0">
             <tr>
                 <th align="left" width="300">Сумма инвестирования: </th>
-                <td align="right"><input name="investSum" class="long" value="@Model.InvestSum" type="number" min="1000" max="1000000"/> RUB</td>
+                <td><input name="investSum" class="long" value="1000" type="number" min="1000" max="1000000"/> RUB</td>
             </tr>
             <tr>
                 <th align="left">Период инвестирования:</th> 
-                <td align="right"><input name="months" class="short" value="@Model.Months" type="number" min="1" max="24"/> месяцев</td>
+                <td><input name="months" class="short" value="12" type="number" min="1" max="24"/> месяцев</td>
             </tr>
         </table>
         <br/>
-     
-        <table class="params"  style="border: 3px solid #a4dede; border-radius: 10px;">
+
+        <table class="params" style="border: 3px solid #a4dede; border-radius: 10px;">
             <tr align="center">
                 <td width="100"><h5>Акции</h5>
-                    <input id="shares" name="sharesPercent" readonly class="short percent" value="@Model.SharesPercent"/>
-                    <font color="#f56816" size="2">% &nbsp</font>
+                    <input id="shares" readonly class="short percent" value="50" width="50"/><font color="#f56816" size="2">% &nbsp</font>
                 </td>
-                <td width="350px">
-                    <input class="slider" id="slider" type="range" min="0" max="100" step="5" value="@Model.BondsPercent" oninput="sliderSize()">
-                </td>
+                <td><input class="slider" id="slider" type="range" min="0" max="100" step="5" value="50" oninput="sliderSize()"></td>
                 <td width="100"><h5>Облигации</h5>
-                    <input id="bonds" name="bondsPercent" readonly class="short percent" type="text" value="@Model.BondsPercent"/>
-                    <font color="#f56816" size="2">% &nbsp</font>
+                    <input id="bonds" readonly class="short percent" type="text" value="50"/><font color="#f56816" size="2">% &nbsp</font>
                 </td>
-
             </tr>
         </table>
-      
         <button type="submit" name="setPortfolio" value="1">Сформировать</button>
-    
-<br/>
+    </form>
+    <br/>
 
 @if (Model.SharesList.Count > 0)
 {
-    <table width="900">
-        <tr>
-            <td><h2>Акции:</h2></td>
-        </tr>
-    </table>
     <table class="recomend" border="1">
         <thead>
             <tr height="50">
                 <th>Наименование</th>
                 <th>Текущая цена</th>
                 <th>Вероятная цена</th>
-                <th>Вероятный доход с одной бумаги</th>
+                <th>Потенциальный доход с одной бумаги</th>
                 <th>Количество актива</th>
                 <th>Покупка</th>
                 <th>Продажа</th>
-                <th>Вероятный доход</th>
+                <th>Потенциальный доход</th>
             </tr>
         </thead>
         <tbody>
@@ -95,26 +75,21 @@
                 </td>
             </tr>*@
         </tfoot>
-    </table>
+        </table>
 }
 @if (Model.BondsList.Count > 0)
 {
-    <table width="900">
-        <tr>
-            <td><h2>Облигации:</h2></td>
-        </tr>
-    </table>
     <table class="recomend" border="1">
         <thead>
             <tr height="50">
                 <th>Наименование</th>
                 <th>Текущая цена</th>
                 <th>Вероятная цена</th>
-                <th>Вероятный доход с одной бумаги</th>
+                <th>Потенциальный доход с одной бумаги</th>
                 <th>Количество актива</th>
                 <th>Покупка</th>
                 <th>Продажа</th>
-                <th>Вероятный доход</th>
+                <th>Потенциальный доход</th>
             </tr>
         </thead>
         <tbody>
@@ -137,16 +112,6 @@
         </tfoot>
     </table>
 }
-        @if (Model.BondsList.Count > 0 || Model.SharesList.Count > 0)
-        {
-            <input type="hidden" name="addStocks" value="true"/>
-            <button type="submit" title="@title" @addEnabled name="addPortfolio" value="2">Добавить портфель</button>
-        }
-        else
-        {
-            
-        }
-    </form>
 </div>
 
 <script>
@@ -159,3 +124,21 @@
       bonds.value = slider.value;
     }
 </script>
+
+
+                    <table class="params" border="0">
+                <tr>
+                    <th align="left" width="300">Сумма инвестирования: </th>
+                    <td>
+                        <input name="investSum" class="short" value="1000" type="number"/>
+                        @*<input name="investSum" class="long" value="1000" type="number" min="1000" max="1000000"/> RUB*@
+                    </td>
+                </tr>
+                <tr>
+                    <th align="left">Период инвестирования:</th> 
+                    <td>
+                        <input name="investSum" class="short" value="1000" type="number"/>
+                        @*<input name="time" class="short" value="12" type="number" min="1" max="24"/> месяцев*@
+                    </td>
+                </tr>
+            </table>

@@ -6,7 +6,7 @@
     string url1 = "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID";
     string url2 = "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=marketdata&marketdata.columns=LAST,LASTCHANGEPRCNT";
     var root1 = await _httpClient.GetFromJsonAsync<MarketDataRoot1>(url1);
-    var root2 = await _httpClient.GetFromJsonAsync<MarketDataRoot2>(url2);
+    var root2 = await _httpClient.GetFromJsonAsync<MarketData>(url2);
 
     double? currentPrice = 0, lastChange = 0; string sign = "+"; string color = "#11c700";
     double difference = 0;

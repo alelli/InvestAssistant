@@ -12,8 +12,4 @@
         //public float SaleAmount { get; set; }
 
     }
-    //public enum Status
-    //{
-
-    //}
 }

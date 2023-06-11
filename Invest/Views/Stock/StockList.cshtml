@@ -46,6 +46,7 @@
                 let resp = await fetch(url);
                 if (resp.ok) {
                     data = await resp.json();
+                    excludeNull();
                     setPagination();
                     renderTable();
                 }
@@ -55,6 +56,15 @@
                 document.querySelectorAll('#catTable thead tr th').forEach(t => {
                   t.addEventListener('click', sort, false);
                 });
+            }
+
+            function excludeNull(){
+              for (let i = 0; i < data.securities.data.length; i++){
+                if (data.marketdata.data[i][0] == null){
+                  data.marketdata.data.splice(i, 1);
+                  data.securities.data.splice(i, 1);
+                }
+              }
             }
 
             function setPagination() {
