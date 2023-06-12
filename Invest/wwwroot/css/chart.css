@@ -7,10 +7,10 @@
 .emitent_info {
     display: fixed;
     margin: 20px;
-    margin-left: 70px;
-    background: #f2f2f2;
-    width: 300px;
-    height: 170px;
+    margin-left: 50px;
+    background: #bff2f2;
+    width: 350px;
+    height: 220px;
     border-right: 2px #dbd9d9 solid;
     border-bottom: 4px #dbd9d9 solid;
     border-radius: 10px 10px 30px 10px;
@@ -39,18 +39,26 @@
     text-decoration: none;
 }
 
-.emitent_info input {
-    /*   padding: 5px 25px; */
-    font: small-caps 19px serif;
-    text-align: center;
-}
+    .emitent_info input {
+        font: small-caps 25px serif;
+        font-weight: bold;
+        background: #bff2f2;
+        border: 0px;
+    }
 
-.emitent_info input.read {
-    background: #f2f2f2;
-    border: 0px;
-}
+    .emitent_info input.secname {
+        color: #2F4F4F;
+        text-align: center;
+        text-align: right;
+    }
 
-.emitent_info input.write {
-    border: 1px #2F4F4F solid;
-    border-radius: 10px;
+        .emitent_info input.price {
+            font: small-caps 30px serif;
+            font-weight: bold;
+            text-align: right;
+            border-bottom: 1px;
+            text-decoration: underline;
+        }
+h3 {
+    color: #f56816;
 }

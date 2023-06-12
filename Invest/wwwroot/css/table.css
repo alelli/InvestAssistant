@@ -37,6 +37,7 @@ table.recomend {
     table-layout: fixed;
     text-align: center;
     border: none;
+    border-bottom: 5px solid #b1f0f0;
     border-radius: 20px;
     border-collapse: collapse;
 }
@@ -80,7 +81,7 @@ table.recomend tbody tr:nth-child(even) {
 }
 
 table.recomend tbody tr:last-child td {
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #b1f0f0;
 }
 
 table.recomend tbody tr:last-child td:first-child {

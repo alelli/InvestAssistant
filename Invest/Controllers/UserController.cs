@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Invest.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    //[Route("api/[controller]")]
+    //[ApiController]
     public class UserController : ControllerBase
     {
         private readonly DataContext _context;

@@ -1,13 +1,21 @@
 ﻿@model RecomendModel
 @{
     ViewData["Title"] = "Собрать портфель";
-    string addEnabled = "disabled",
-        title = "Для добавления актива в портфель необходимо войти в аккаунт";
-    @if (User.Identity.Name != null)
+    double sharesCosts = 0, sharesSale = 0, sharesIncome = 0, 
+    bondsCosts = 0, bondsSale = 0, bondsIncome = 0;
+    foreach (var row in Model.SharesList)
     {
-        addEnabled = "enabled";
-        title = "Добавить актив в портфель";
+        sharesCosts += row.LastPrice * row.Amount;
+        sharesSale += row.ForecastedPrice * row.Amount;
     }
+    sharesIncome = sharesSale - sharesCosts;
+    
+    foreach (var row in Model.BondsList)
+    {
+        bondsCosts += row.LastPrice * row.Amount;
+        bondsSale += row.ForecastedPrice * row.Amount;
+    }
+    bondsIncome = bondsSale - bondsCosts;
 }
 <link rel="stylesheet" href="~/css/table.css" asp-append-version="true" />
 
@@ -55,14 +63,14 @@
             <td><h2>Акции:</h2></td>
         </tr>
     </table>
-    <table class="recomend" border="1">
+    <table id="sharesTable" class="recomend" border="1">
         <thead>
             <tr height="50">
                 <th>Наименование</th>
                 <th>Текущая цена</th>
                 <th>Вероятная цена</th>
                 <th>Вероятный доход с одной бумаги</th>
-                <th>Количество актива</th>
+                <th>Количество активов</th>
                 <th>Покупка</th>
                 <th>Продажа</th>
                 <th>Вероятный доход</th>
@@ -77,24 +85,18 @@
                     <td>@p.ForecastedPrice</td>
                     <td>@p.Income</td>
                     <td>@p.Amount</td>
-                    <td>@p.Buy</td>
-                    <td>@p.Sale</td>
-                    <td>@p.TotalIncome</td>
+                    <td><font color="orange">@p.Buy</font></td>
+                    <td><font color="#a1cf23">@p.Sale</font></td>
+                    <td><font color="green">@p.TotalIncome</font></td>
                 </tr>
             }
+            <tr> 
+                <td colspan="5"><b>ИТОГО по акциям:</b></td>
+                <td><font color="orange"><b>@Math.Round(sharesCosts, 2)</b></font></td>
+                <td><font color="#a1cf23"><b>@Math.Round(sharesSale, 2)</b></font></td>
+                <td><font color="green"><b>+@Math.Round(sharesIncome, 2)</b></font></td>
+            </tr>
         </tbody>
-        <tfoot>
-            @*<tr> ДОБАВИТЬ ЧЕРЕЗ JS
-                <td colspan="5">ИТОГО по акциям:</td>
-                    
-                <td>
-                    @Model.TotalCosts
-                </td>
-                <td>
-                    @Model.TotalIncome
-                </td>
-            </tr>*@
-        </tfoot>
     </table>
 }
 @if (Model.BondsList.Count > 0)
@@ -104,14 +106,14 @@
             <td><h2>Облигации:</h2></td>
         </tr>
     </table>
-    <table class="recomend" border="1">
+    <table id="bondsTable" class="recomend" border="1">
         <thead>
             <tr height="50">
                 <th>Наименование</th>
                 <th>Текущая цена</th>
                 <th>Вероятная цена</th>
                 <th>Вероятный доход с одной бумаги</th>
-                <th>Количество актива</th>
+                <th>Количество активов</th>
                 <th>Покупка</th>
                 <th>Продажа</th>
                 <th>Вероятный доход</th>
@@ -126,25 +128,23 @@
                     <td>@p.ForecastedPrice</td>
                     <td>@p.Income</td>
                     <td>@p.Amount</td>
-                    <td>@p.Buy</td>
-                    <td>@p.Sale</td>
-                    <td>@p.TotalIncome</td>
+                    <td><font color="orange">@p.Buy</font></td>
+                    <td><font color="green">@p.Sale</font></td>
+                    <td><font color="green">@p.TotalIncome</font></td>
                 </tr>
             }
+            <tr> 
+                <td colspan="5"><b>ИТОГО по облигациям:</b></td>
+                <td><font color="orange"><b>@Math.Round(bondsCosts, 2)</b></font></td>
+                <td><font color="green"><b>@Math.Round(bondsSale, 2)</b></font></td>
+                <td><font color="green"><b>+@Math.Round(bondsIncome, 2)</b></font></td>
+            </tr>
         </tbody>
-        <tfoot>
-
-        </tfoot>
     </table>
 }
-        @if (Model.BondsList.Count > 0 || Model.SharesList.Count > 0)
+        @if (Model.BondsList.Count == 0 && Model.SharesList.Count == 0)
         {
-            <input type="hidden" name="addStocks" value="true"/>
-            <button type="submit" title="@title" @addEnabled name="addPortfolio" value="2">Добавить портфель</button>
-        }
-        else
-        {
-            
+            <br/><br/><br/><br/><br/><br/>
         }
     </form>
 </div>
@@ -157,5 +157,11 @@
       let slider = document.getElementById("slider");
       shares.value = 100 - slider.value;
       bonds.value = slider.value;
+    }
+
+    document.addEventListener('DOMContentLoaded', init, false);
+
+    function init() {
+  
     }
 </script>

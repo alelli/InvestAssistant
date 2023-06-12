@@ -64,7 +64,7 @@ namespace Invest.Controllers
 
         public async Task<IActionResult> Bonds(string id)
         {
-            string market = "bonds/boards/TQCB";
+            string market = "shares/boards/TQBR";
 
             if (id != null)
             {
@@ -149,9 +149,7 @@ namespace Invest.Controllers
                         prices.Add(jsonPrices.history.data[i][0].Value);
                     }
                     else
-                    {
                         return new List<double>();
-                    }
                 }
             }
             return prices;

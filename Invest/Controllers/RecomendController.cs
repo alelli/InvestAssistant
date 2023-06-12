@@ -114,7 +114,7 @@ namespace Invest.Controllers
         private static async Task<List<RecomendData>> GetRecomendTableAsync(List<string> securities, string market, float recomendSum, DateTime startDate, int daysToParse, int horizon)
         {
             var data = new List<RecomendData>();
-            for (int i = 0; i < 15; i++) //each (var sec in securities)   securities.Count
+            for (int i = 0; i < 15; i++) //50   each (var sec in securities)   securities.Count
             {
                 var stocks = await GetSecurityData(market, securities[i], startDate, daysToParse);
                 if (stocks.Count > 0)
@@ -155,21 +155,21 @@ namespace Invest.Controllers
                         else
                             continue;
                     }
-
-                    float buySum = row.LastPrice * amount;
-                    if (buySum > maxRecomendSum)
+                    else if (row.LastPrice * amount > maxRecomendSum)
                     {
                         amount--;
                     }
-
+                    
+                    float buySum = row.LastPrice * amount;
                     row.Amount = amount;
+                    row.Buy = (float)Math.Round(buySum, 2);
+                    row.Sale = (float)Math.Round(amount * row.ForecastedPrice, 2);
+                    row.TotalIncome = (float)Math.Round(row.Sale - row.Buy, 2);
                     result.Add(row);
+
                     totalSum += buySum;
                     if (totalSum > minRecomendSum)
                     {
-                        row.Buy = buySum;
-                        row.Sale = amount * row.ForecastedPrice;
-                        row.TotalIncome = amount * row.Income;
                         break;
                     }
                     recomendSum -= totalSum;

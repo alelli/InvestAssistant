@@ -1,12 +1,13 @@
 ﻿@model ChartData
 @{
     ViewData["Title"] = Model.SecId;
-    string enabled = "disabled", title = "Для добавления актива в портфель необходимо войти в аккаунт";
-    if (User.Identity.Name != null)
-    {
-        enabled = "enabled";
-        title = "Добавить актив в портфель";
+    string sign = "";
+    string color = "red";
+    if (Model.LastChange > 0){
+        color = "green";
+        sign = "+";
     }
+    double change = Math.Round(Model.ForecastedPrices.Last() / Model.LastPrice * 100 - 100, 2);
 }
 <link rel="stylesheet" href="~/css/chart.css" asp-append-version="true" />
 <table width="100%" border="0">
@@ -14,22 +15,33 @@
         <td valign="top">
             <form method="post">
                 <div align="center" class="emitent_info">
-                    <h3><input name="secId" value="@Model.SecId" class="read" readonly/></h3>
-                    <h3><input name="secName" value="@Model.SecName" class="read" readonly/></h3>
-                    <h2><input name="lastPrice" value="@Model.LastPrice" class="read" size="5" readonly/> RUB</h2>
-
-                    <font size="2" color="green">@Model.LastChange</font>
-                    <font size="2" style="color: orange"> Держать</font>
-                
-                    <button name="addStock" type="submit" @enabled title="@title">Добавить актив</button>
-                    <a id="adding" data-add="-1" style="color: #f70a1a"> − </a>
-                    <font size="3">
-                        <input id="stockAmount" name="amount" value="@Model.Amount" class="write" type="number" min="1" max="100" size="1" align="center"/>
-                    </font>
-                    <a id="adding" data-add="1"> + </a>
-                
+                    <h3><input name="secId" value="@Model.SecId" class="read" readonly type="hidden"/></h3>
+                    <table border="0">
+                        <tr>
+                            <td align="right"><h3 style="margin-top: 10px;"><input name="secName" value="@Model.SecName" class="secname" readonly/></h3></td>
+                        </tr>
+                        <tr >
+                            <td align="right"><input name="lastPrice" value="@Model.LastPrice" class="price" size="5" readonly/>
+                            <font size="4" color="#2F4F4F"><b>&nbspRUB</b></font>
+                            </td>
+                            @*<td width="60" align="right"></td>*@
+                        </tr>
+                        <tr>
+                            <td align="right"><h3>Последнее изменение: <font size="2" color="@color">@sign@Model.LastChange %</font></h3></td>
+                        </tr>
+                        <tr>
+                            @if (change > 0){
+                                color = "green";
+                                sign = "+";
+                            }
+                            else{
+                                sign = "";
+                                color = "red";
+                            }
+                            <td align="right"><h3>Вероятное изменение: <font size="2" color="@color">@sign@change %</font></h3></td>
+                        </tr>
+                    </table>
                 </div>
-                
             </form>
         </td>
         <td>
@@ -41,10 +53,6 @@
         </td>
     </tr>
 </table>
-
-@*<h2>@Model.Secid</h2>*@
-<h2>Стоимость акции: @ViewBag.Info</h2>
-@*<h2 id="check">asd</h2>*@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
 @section Scripts{

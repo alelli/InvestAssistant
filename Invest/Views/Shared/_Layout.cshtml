@@ -13,12 +13,7 @@
             <ul>
 		        <li><a href="/Stock/Shares">Акции</a></li>
 		        <li><a href="/Stock/Bonds">Облигации</a></li>
-                @if (User.Identity.Name != null) {
-                    <li><a href="/Account/Settings">Мой портфель</a></li>
-                }
-                else {
-                <li><a href="/Account/Login">Войти</a></li>
-                }
+                    <li><a href="/Recomend/Create">Подбор портфеля</a></li>
             </ul>
           </nav>
     </header>
