@@ -1,13 +1,15 @@
 ﻿@model ChartData
 @{
-    ViewData["Title"] = Model.SecId;
+    ViewData["Title"] = "График цены"; //Model.SecId;
     string sign = "";
     string color = "red";
     if (Model.LastChange > 0){
         color = "green";
         sign = "+";
     }
-    double change = Math.Round(Model.ForecastedPrices.Last() / Model.LastPrice * 100 - 100, 2);
+    double change = 0;
+    if (Model.LastPrice != 0)
+        change = Math.Round(Model.ForecastedPrices.Last() / Model.LastPrice * 100 - 100, 2);
 }
 <link rel="stylesheet" href="~/css/chart.css" asp-append-version="true" />
 <table width="100%" border="0">
@@ -24,7 +26,6 @@
                             <td align="right"><input name="lastPrice" value="@Model.LastPrice" class="price" size="5" readonly/>
                             <font size="4" color="#2F4F4F"><b>&nbspRUB</b></font>
                             </td>
-                            @*<td width="60" align="right"></td>*@
                         </tr>
                         <tr>
                             <td align="right"><h3>Последнее изменение: <font size="2" color="@color">@sign@Model.LastChange %</font></h3></td>
@@ -60,8 +61,7 @@
         document.addEventListener('DOMContentLoaded', init, false);
 
         let canvas, secid;
-        let dates = [];
-        let prices = [];
+        let dates = [], prices = [];
         let forecastedPrices = [];
         let check = document.querySelector('#check');
 

@@ -2,18 +2,20 @@
     background-color: white;
     width: 850px;
     height: 550px;
+    margin-right: 100px;
+    margin-top: 35px;
 }
 
 .emitent_info {
     display: fixed;
     margin: 20px;
-    margin-left: 50px;
-    background: #bff2f2;
-    width: 350px;
+    margin-left: 150px;
+    margin-top: 60px;
+    background: white;
+    width: 400px;
     height: 220px;
-    border-right: 2px #dbd9d9 solid;
-    border-bottom: 4px #dbd9d9 solid;
-    border-radius: 10px 10px 30px 10px;
+    border: 1px #bababa solid;
+    border-radius: 5px;
 }
 
 .emitent_info h2 {
@@ -39,26 +41,26 @@
     text-decoration: none;
 }
 
-    .emitent_info input {
-        font: small-caps 25px serif;
-        font-weight: bold;
-        background: #bff2f2;
-        border: 0px;
-    }
+.emitent_info input {
+    font: small-caps 25px serif;
+    font-weight: bold;
+    background: white;
+    border: 0px;
+}
 
-    .emitent_info input.secname {
-        color: #2F4F4F;
-        text-align: center;
-        text-align: right;
-    }
+.emitent_info input.secname {
+    color: #2F4F4F;
+    text-align: center;
+    text-align: right;
+}
 
-        .emitent_info input.price {
-            font: small-caps 30px serif;
-            font-weight: bold;
-            text-align: right;
-            border-bottom: 1px;
-            text-decoration: underline;
-        }
+.emitent_info input.price {
+    font: small-caps 30px serif;
+    font-weight: bold;
+    text-align: right;
+    border-bottom: 1px;
+    text-decoration: underline;
+}
 h3 {
     color: #f56816;
 }

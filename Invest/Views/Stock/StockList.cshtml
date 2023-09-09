@@ -1,13 +1,13 @@
 ﻿@model string
 @{
-    ViewData["Title"] = "Список";
+    ViewData["Title"] = "Список активов";
 }
 <link rel="stylesheet" href="~/css/table.css" asp-append-version="true" />
 <h2>@ViewBag.Date</h2>
     <div width="100%" align="center">
         <form method="post">
         <table id="catTable" class="securities" align="center" border="1">
-          <caption>Котировки на текущую дату</caption>
+          <caption id="caption"></caption>
           <thead>
             <tr>
               <th width="130px" data-sort='0'>Код</th>
@@ -17,166 +17,204 @@
             </tr>
           </thead>
           <tbody>
-            <tr ><td colspan="5"><i>Loading...</i></td></tr>
+            <tr ><td colspan="4"><i>Loading...</i></td></tr>
         </table>
         </form>
         <div class="pages">
           <button id="prevButton">Назад</button>
-          <button id="toPageButton" data-page="1" style="border: 1px solid black;">1</button>
+        <button id="toPageButton" data-page="0" hidden>0</button>
           <section id="pagination"></section>
           <button id="nextButton">Вперед</button>
         </div>
       </div>
 
     @section Scripts{
-        <script>
-            document.addEventListener('DOMContentLoaded', init, false);
+    <script>
+        document.addEventListener('DOMContentLoaded', init, false);
+            
+        let data, table;
+        let sortCol = 0, sortAsc = true;
+        const pageSize = 15;
+        let allPages;
+        let market = '@Model';
 
-            let data, table, pagesSection, curPageButton;
-            let sortAsc = true;
-            const pageSize = 15;
-            const pagesCount = 8;
-            let sortCol = 0;
-            let curPage = 1;
+        async function init() {
+            table = document.querySelector('#catTable tbody');
+            url = `https://iss.moex.com/iss/engines/stock/markets/${market}/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTTOPREVPRICE`; //LASTCHANGEPRCNT
+            let resp = await fetch(url);
+            if (resp.ok) {
+                data = await resp.json();
+                allPages = Math.ceil(data.securities.data.length / pageSize);
+                excludeNulls();
+                setCaption(market);
+                setPagination();
+                renderTable();
+            }
+            else {
+                alert("request is invalid");
+            }
+            document.querySelectorAll('#catTable thead tr th').forEach(t => {
+                t.addEventListener('click', sort, false);
+            });
+        }
 
-            async function init() {
-                table = document.querySelector('#catTable tbody');
-                let market = '@Model';
-                url = `https://iss.moex.com/iss/engines/stock/markets/${market}/securities.json?iss.meta=off&iss.only=securities,marketdata&securities.columns=SECID,SHORTNAME&marketdata.columns=LAST,LASTCHANGEPRCNT`;
-                let resp = await fetch(url);
-                if (resp.ok) {
-                    data = await resp.json();
-                    excludeNull();
-                    setPagination();
-                    renderTable();
+        function excludeNulls() {
+            for (let i = 0; i < data.securities.data.length; i++) {
+                if (data.marketdata.data[i][0] == null) {
+                    data.marketdata.data.splice(i, 1);
+                    data.securities.data.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function setCaption(market){
+            let now = (new Date()).toLocaleDateString();
+            let caption = "";
+            if (market == "shares/boards/TQBR")
+                caption = "Котировки акций на " + now;
+            else
+                caption = "Котировки облигаций на " + now;
+            document.querySelector("#caption").innerHTML = caption;
+        }
+
+        function renderTable() {
+            let stock = "";
+            if (market == "shares/boards/TQBR")
+                stock = "Shares";
+            else
+                stock = "Bonds";
+            let result = '', start, color, sign;
+            data.securities.data.filter((row, index) => {
+                start = (curPage - 1) * pageSize;
+                let end = curPage * pageSize;
+                if (index >= start && index < end) return true;
+            }).forEach(c => {
+                if (data.marketdata.data[start][1] > 0) {
+                    color = "#11c700";
+                    sign = "+";
                 }
                 else {
-                    alert("request is invalid");
+                    color = "red";
+                    sign = "";
                 }
-                document.querySelectorAll('#catTable thead tr th').forEach(t => {
-                  t.addEventListener('click', sort, false);
-                });
-            }
+                result += `<tr align="center">
+                        <td><a href="/Stock/${stock}/${c[0]}">${c[0]}</a></td>
+                        <td>${c[1]}</td>
+                        <td>${data.marketdata.data[start][0]}</td>
+                        <td style="color: ${color};">${sign}${data.marketdata.data[start][1]}%</td>
+                        </tr>`;
+                start++;
+            });
+            table.innerHTML = result;
+        }
 
-            function excludeNull(){
-              for (let i = 0; i < data.securities.data.length; i++){
-                if (data.marketdata.data[i][0] == null){
-                  data.marketdata.data.splice(i, 1);
-                  data.securities.data.splice(i, 1);
-                }
-              }
-            }
-
-            function setPagination() {
-                pagesSection = document.querySelector('#pagination');
-                let pageCount = Math.ceil(data.securities.data.length / pageSize);
-                let result = '';
-                for (let i = 2; i <= pageCount; i++) {
-                    if (i == pagesCount){
-                        result += `<button>...</button>`;
-                        break;
-                    }
-                    result += `<button id="toPageButton" name="${i}" listener="toPage(${i})" data-page="${i}">${i}
-                        </button>`;
-                }
-                pagesSection.innerHTML = result;
-
-                document.querySelectorAll('#toPageButton').forEach(t => {
-                t.addEventListener('click', toPage, false);
-                });
-            }
-
-            document.querySelector('#nextButton').addEventListener('click', nextPage, false);
-            document.querySelector('#prevButton').addEventListener('click', previousPage, false);
-
-            function renderTable() {
-                let result = '';
-                let start;
-                let color;
-                let sign;
-                data.securities.data.filter((row, index) => {
-                    start = (curPage-1)*pageSize;
-                    let end =curPage*pageSize;
-                    if(index >= start && index < end) return true;
-                    }).forEach(c => {
-                        if (data.marketdata.data[start][1] > 0) {
-                            color = "#11c700";
-                            sign = "+";
-                        }
-                        else {
-                            color = "red";
-                            sign = "";
-                        }
-                        result += `<tr align="center">
-                            <td><a href="/Stock/Shares/${c[0]}">${c[0]}</a></td>
-                            <td>${c[1]}</td>
-                            <td>${data.marketdata.data[start][0]}</td>
-                            <td style="color: ${color};">${sign}${data.marketdata.data[start][1]}%</td>
-                            </tr>`;
-                        start++;
-                });
-                table.innerHTML = result;
-            }
-
-
-            function sort(e) {
-              let thisSort = e.target.dataset.sort;
-              if (sortCol == thisSort) {
-                sortAsc = !sortAsc;
-              }
-              else {
-                sortCol = thisSort;
-                sortAsc = true;
-              }
-              data.securities.data.sort((a, b) => {
-                if(a[sortCol] < b[sortCol]) 
-                  return sortAsc ? -1 : 1;
-                if(a[sortCol] > b[sortCol]) 
-                  return sortAsc ? 1 : -1;
-                return 0;
-              });
-              check.innerHTML = sortCol;
-              check1.innerHTML = sortAsc;
-              renderTable();
-            }
-
-            function toPage(e){ 
-              let pageNum = e.target.dataset.page;
-              if (curPage != pageNum){
-                document.querySelectorAll('#toPageButton').forEach(t => {
-                  t.style.border = '1px transparent solid';
-                });
-                e.target.style.border = '1px black solid';
-                curPage = pageNum;
-                renderTable();
-              }
-            }
-
-            function previousPage() {
-                if (curPage > 1) {
-                    curPage--;
-                    renderTable();
-                    circleCurPage(curPage);
-                }
-            }
-
-            function nextPage() {
-                if ((curPage * pageSize) < data.securities.data.length) {
-                    curPage++;
-                    renderTable();
-                    circleCurPage(curPage);
-                }
-            }
-
-            function circleCurPage(curPage){
-              document.querySelectorAll('#toPageButton').forEach(t => {
-                if (t.dataset.page == curPage){
-                  t.style.border = '1px black solid';
-                }
-                else 
-                  t.style.border = '1px transparent solid';
-              });
-            }
+        document.querySelector('#nextButton').addEventListener('click', nextPage, false);
+        document.querySelector('#prevButton').addEventListener('click', previousPage, false);
             
-        </script>
+        let firstPage = 1, lastPage = 7, curPage = 1;
+        function setPagination() {
+            let pagesSection = document.querySelector('#pagination');
+            let result = '';
+            if (firstPage != 1){
+                result += `<button>...</button>`;
+            }
+            for (let i = firstPage; i <= lastPage; i++){
+            if (i == curPage){
+                result += `<button id="toPageButton" enabled="false" style="border: 1px solid black;" data-page="${i}">${i}</button>`;
+            }
+            else 
+                result += `<button id="toPageButton" enabled="false" data-page="${i}">${i}</button>`;
+            }
+            if (lastPage != allPages){
+                result += `<button>...</button>`;
+            }
+            pagesSection.innerHTML = result;
+
+            document.querySelectorAll('#toPageButton').forEach(t => {
+                t.addEventListener('click', toPage, false);
+            });
+        } 
+        
+        function toPage(e) {
+            let pageNum = Number(e.target.dataset.page);
+            if (pageNum != curPage) {
+                curPage = pageNum;
+                if (firstPage != pageNum - 3 || lastPage != pageNum + 3) {
+                    changePageLimits(pageNum);
+                }
+                else {
+                    markCurrentPage(curPage);
+                }
+                renderTable();
+            }
+        }
+
+        function changePageLimits(pageNum) {
+            if (pageNum > 3 && pageNum < allPages - 3) {
+                firstPage = pageNum - 3;
+                lastPage = pageNum + 3;
+            }
+            else if (pageNum <= 3) {
+                firstPage = 1;
+                lastPage = firstPage + 6;
+            }
+            else if (pageNum >= allPages - 3) {
+                lastPage = allPages;
+                firstPage = lastPage - 6;
+            }
+            setPagination();
+        }
+
+        function previousPage() {
+            if (curPage > 1) {
+                curPage--;
+                if (firstPage != curPage - 3 || lastPage != curPage + 3) {
+                    changePageLimits(curPage);
+                }
+                markCurrentPage(curPage);
+                renderTable();
+            }
+        }
+
+        function nextPage() {
+            if ((curPage * pageSize) < data.securities.data.length) {
+                curPage++;
+                if (firstPage != curPage - 3 || lastPage != curPage + 3) {
+                    changePageLimits(curPage);
+                }
+                markCurrentPage(curPage);
+                renderTable();
+            }
+        }
+
+        function markCurrentPage(curPage) {
+            document.querySelectorAll('#toPageButton').forEach(t => {
+                if (t.dataset.page == curPage) {
+                    t.style.border = '1px black solid';
+                }
+                else
+                    t.style.border = '1px transparent solid';
+            });
+        }
+
+        function sort(e) {
+            let thisSort = e.target.dataset.sort;
+            if (sortCol == thisSort) {
+            sortAsc = !sortAsc;
+            }
+            else {
+            sortCol = thisSort;
+            sortAsc = true;
+            }
+            data.securities.data.sort((a, b) => {
+            if(a[sortCol] < b[sortCol]) 
+                return sortAsc ? -1 : 1;
+            if(a[sortCol] > b[sortCol]) 
+                return sortAsc ? 1 : -1;
+            return 0;
+            });
+            renderTable();
+        }
+    </script>
     }

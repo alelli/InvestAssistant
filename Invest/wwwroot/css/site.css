@@ -24,8 +24,8 @@ header {
 }
 
 .content {
-    padding-bottom: 50px;
-    margin-top: 50px;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 nav.menu ul {
@@ -55,7 +55,7 @@ nav a:hover {
 }
 
 footer {
-    position: relative;
+    position: absolute;
     left: 0;
     bottom: 0;
     width: 100%;

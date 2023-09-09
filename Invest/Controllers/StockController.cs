@@ -1,212 +1,151 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Invest.JsonClasses;
+using Invest.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.ML;
 using Microsoft.ML.Transforms.TimeSeries;
-using Microsoft.ML.Data;
 
 namespace Invest.Controllers
 {
     public class StockController : Controller
     {
-        private readonly ILogger<StockController> _logger;
-        private static HttpClient _httpClient = new HttpClient();
-        private readonly DataContext _context;
+        public readonly static string sharesMarket = "shares/boards/TQBR",
+            bondsMarket = "bonds/boards/TQCB";
 
-        public StockController(ILogger<StockController> logger, DataContext context)
-        {
-            _logger = logger;
-            _context = context;
-        }
+        private static HttpClient _httpClient = new HttpClient();
 
         public async Task<IActionResult> Shares(string id)
         {
-            string market = "shares/boards/TQBR";
-
             if (id != null)
             {
-                ChartData chartData = await GetChartDataAsync(id, market);
+                ChartData chartData = await GetChartDataAsync(id, sharesMarket, DateTime.Now.AddDays(-366).Date, DateTime.Now.Date);
                 return View("Chart", chartData);
             }
-            return View("StockList", "shares/boards/TQBR");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Shares(string secId, string secName, float lastPrice, int amount)  // UserStock
-        {
-            var identityEmail = User.Identity.Name;
-            var dbUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == identityEmail);
-            if (dbUser != null)
-            {
-                var dbStock = await _context.UserStocks.FindAsync(dbUser.Id, secId);
-                if (dbStock != null)
-                {
-                    var prevSum = dbStock.PurchasePrice * dbStock.Quantity;
-                    var curSum = lastPrice * amount;
-                    dbStock.Quantity += amount;
-                    dbStock.PurchasePrice = (float)Math.Round((prevSum + curSum) / dbStock.Quantity, 2);
-                }
-                else
-                {
-                    //ViewBag.Info = secId;
-                    UserStock newStock = new UserStock()
-                    {
-                        User = dbUser,
-                        SecName = secName,
-                        SecId = secId,
-                        Quantity = amount,
-                        PurchasePrice = lastPrice
-                    };
-                    _context.UserStocks.Add(newStock);
-                }
-                await _context.SaveChangesAsync();
-            }
-            return await Shares(secId);
+            return View("StockList", sharesMarket);
         }
 
         public async Task<IActionResult> Bonds(string id)
         {
-            string market = "shares/boards/TQBR";
-
             if (id != null)
             {
-                ChartData chartData = await GetChartDataAsync(id, market);
+                ChartData chartData = await GetChartDataAsync(id, bondsMarket, DateTime.Now.AddDays(-366).Date, DateTime.Now.Date);
                 return View("Chart", chartData);
             }
-            return View("StockList", market);
+            return View("StockList", bondsMarket);
         }
 
-        public static async Task<ChartData> GetChartDataAsync(string id, string market)
+        public static async Task<ChartData> GetChartDataAsync(string id, string market, DateTime startDate, DateTime endDate)
         {
-            var dates = new List<DateTime>();
-            var prices = new List<double>();
-            ChartData chartData = new ChartData();
+            ChartData chartData = await GetSecurityInfoAsync(id, market);
+            SecurityHistory securityData = await ParseSecurityDataAsync(id, market, startDate, endDate);
 
-            DateTime currentDate = DateTime.Now.Date,
-                startDate = currentDate.AddDays(-366),
-                endDate;
+            int length = securityData.Dates.Count;
+            chartData.Dates = new List<DateTime>(securityData.Dates.GetRange(length - 100, 100));
+            chartData.Prices = new List<double>(securityData.Prices.GetRange(length - 100, 100));
+            chartData.ForecastedPrices = new List<double>(securityData.Prices.GetRange(length - 100, 100));
 
-            for (int k = 0; k < 3; k++)
+            if (securityData.Prices.Count > 14)
             {
-                endDate = startDate.AddDays(366 / 3 - 1);
-                string stringStartDate = $"{startDate.Year}-{startDate.Month}-{startDate.Day}",
-                    stringEndDate = $"{endDate.Year}-{endDate.Month}-{endDate.Day}";
-
-                var newPrices = await GetPricesAsync(id, market, stringStartDate, stringEndDate);
-                if (newPrices.Count > 0)
-                {
-                    var newDates = await GetDatesAsync(id, market, stringStartDate, stringEndDate);
-                    if (k == 2)
-                    {
-                        var stockInfo = await GetSecurityDataAsync(market);
-                        string secName = "";
-                        float lastPrice = 0, lastChange = 0;
-                        foreach (var info in stockInfo)
-                        {
-                            if (info.SecId == id)
-                            {
-                                secName = info.SecName;
-                                lastPrice = info.LastPrice;
-                                lastChange = info.LastChange;
-                                break;
-                            }
-                        }
-                        chartData = new ChartData()
-                        {
-                            SecId = id,
-                            SecName = secName,
-                            LastPrice = lastPrice,
-                            LastChange = lastChange,
-                            Amount = 1,
-                            Dates = newDates,
-                            Prices = newPrices,
-                            ForecastedPrices = new List<double>(newPrices)
-                        };
-                    }
-                    dates.AddRange(newDates);
-                    prices.AddRange(newPrices);
-                    startDate = endDate.AddDays(1);
-
-                }
-                else
-                    return chartData;
+                StockForecast? forecast = ForecastStocks(AlgorithmController.ConvertSecurityDataToStockList(securityData), 14);
+                AddPredictionToChartData(forecast, ref chartData, securityData.Dates[securityData.Dates.Count - 1]);
             }
-            StockPrediction? prediction = ForecastTimeSeries(AlgorithmController.DataToStock(dates, prices), 30);
-            AddPredictionToChartData(prediction, ref chartData, dates[dates.Count - 1]);
             return chartData;
         }
 
-        [NonAction]
-        public static async Task<List<double>> GetPricesAsync(string id, string market, string startDate, string endDate)
+        public static async Task<SecurityHistory> ParseSecurityDataAsync(string id, string market, DateTime startDate, DateTime endDate)
         {
-            var url = $"https://iss.moex.com/iss/history/engines/stock/markets/{market}/securities/{id}.json?iss.meta=off&history.columns=OPEN&from={startDate}&till={endDate}";
-            var jsonPrices = await _httpClient.GetFromJsonAsync<DoubleHistoryData>(url);
+            const int parsingDays = 100;
+
+            var dates = new List<DateTime>();
             var prices = new List<double>();
-            if (jsonPrices != null)
+
+            var daysInterval = Math.Abs((startDate - endDate).Days);
+            var iterations = Math.Ceiling((double)daysInterval / parsingDays);
+            DateTime currentEndDate;
+
+            for (int i = 0; i < iterations; i++)
+            {
+                currentEndDate = startDate.AddDays(parsingDays);
+                if (currentEndDate > endDate)
+                    currentEndDate = endDate;
+                
+                var history = await GetHistoryByRequestAsync(id, market, startDate, currentEndDate);
+                var newPrices = history.Prices;
+                var newDates = history.Dates;
+
+                dates.AddRange(newDates);
+                prices.AddRange(newPrices);
+
+                startDate = currentEndDate.AddDays(1);
+            }
+            return new SecurityHistory { Dates = dates, Prices = prices };
+        }
+
+        [NonAction]
+        public static async Task<SecurityHistory> GetHistoryByRequestAsync(string id, string market, DateTime startDate, DateTime endDate)
+        {
+            string stringStartDate = startDate.ToString("yyyy-MM-dd"),
+                stringEndDate = endDate.ToString("yyyy-MM-dd");
+
+            var urlPrice = $"https://iss.moex.com/iss/history/engines/stock/markets/{market}/securities/{id}.json?iss.meta=off&history.columns=OPEN&from={stringStartDate}&till={stringEndDate}";
+            var urlDate = $"https://iss.moex.com/iss/history/engines/stock/markets/{market}/securities/{id}.json?iss.meta=off&history.columns=TRADEDATE&from={stringStartDate}&till={stringEndDate}";
+            var jsonPrices = await _httpClient.GetFromJsonAsync<DoubleHistoryData>(urlPrice);
+            var jsonDates = await _httpClient.GetFromJsonAsync<StringHistoryData>(urlDate);
+
+            var prices = new List<double>();
+            var dates = new List<DateTime>();
+
+            if (jsonPrices != null && jsonDates != null)
             {
                 for (int i = 0; i < jsonPrices.history.data.Count; i++)
                 {
                     if (jsonPrices.history.data[i][0].HasValue)
                     {
                         prices.Add(jsonPrices.history.data[i][0].Value);
+                        dates.Add(DateTime.ParseExact(jsonDates.history.data[i][0], "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
                     }
-                    else
-                        return new List<double>();
                 }
+
             }
-            return prices;
+            return new SecurityHistory() { Dates = dates, Prices = prices };
         }
 
         [NonAction]
-        public static async Task<List<DateTime>> GetDatesAsync(string id, string market, string startDate, string endDate)
-        {
-            var url = $"https://iss.moex.com/iss/history/engines/stock/markets/{market}/securities/{id}.json?iss.meta=off&history.columns=TRADEDATE&from={startDate}&till={endDate}";
-            var jsonDates = await _httpClient.GetFromJsonAsync<StringHistoryData>(url);
-            List<DateTime> dates = new List<DateTime>();
-            if (jsonDates != null)
-            {
-                for (int i = 0; i < jsonDates.history.data.Count; i++)
-                {
-                    dates.Add(DateTime.ParseExact(jsonDates.history.data[i][0], "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
-                }
-            }
-            return dates;
-        }
-
-        [NonAction]
-        public static async Task<List<StockInfo>> GetSecurityDataAsync(string market)
+        public static async Task<ChartData> GetSecurityInfoAsync(string id, string market)
         {
             var urlStatic = $"https://iss.moex.com/iss/engines/stock/markets/{market}/securities.json?&iss.meta=off&iss.only=securities&securities.columns=SECID,SHORTNAME";
-            var jsonStatic = await _httpClient.GetFromJsonAsync<StringStaticData>(urlStatic);
+            var jsonStatic = await _httpClient.GetFromJsonAsync<StaticData>(urlStatic);
 
-            var urlDynamic = $"https://iss.moex.com/iss/engines/stock/markets/{market}/securities.json?&iss.meta=off&iss.only=marketdata&marketdata.columns=LAST,LASTCHANGEPRCNT";
-            var jsonDynamic = await _httpClient.GetFromJsonAsync<MarketData>(urlDynamic);
+            var urlDynamic = $"https://iss.moex.com/iss/engines/stock/markets/{market}/securities.json?&iss.meta=off&iss.only=marketdata&marketdata.columns=LAST,LASTTOPREVPRICE";//LASTCHANGEPRCNT
+            var jsonDynamic = await _httpClient.GetFromJsonAsync<DynamicData>(urlDynamic);
 
-            var dynamicData = new List<StockInfo>();
+            ChartData data = new ChartData();
+
             if (jsonStatic != null && jsonDynamic != null)
             {
                 var staticData = jsonStatic.securities.data;
-                var marketData = jsonDynamic.marketdata.data;
-                for (int i = 0; i < staticData.Count && i < marketData.Count; i++)
+                var dynamicData = jsonDynamic.marketdata.data;
+
+                for (int i = 0; i < staticData.Count && i < dynamicData.Count; i++)
                 {
-                    if (marketData[i][0].HasValue)
+                    if (dynamicData[i][0].HasValue && staticData[i][0] == id)
                     {
-                        dynamicData.Add(new StockInfo()
+                        data = new ChartData()
                         {
-                            SecId = staticData[i][0],
                             SecName = staticData[i][1],
-                            LastPrice = (float)marketData[i][0].Value,
-                            LastChange = (float)marketData[i][1].Value,
-                        });
+                            LastPrice = (float)dynamicData[i][0].Value,
+                            LastChange = (float)dynamicData[i][1].Value
+                        };
                     }
                 }
             }
-            return dynamicData;
+            return data;
         }
 
-        private static void AddPredictionToChartData(StockPrediction? prediction, ref ChartData chartData, DateTime lastDate)
+        private static void AddPredictionToChartData(StockForecast? forecast, ref ChartData chartData, DateTime lastDate)
         {
-            if (prediction != null)
+            if (forecast != null)
             {
-                foreach (float item in prediction.ForecastedPrices)
+                foreach (float item in forecast.ForecastedPrices)
                 {
                     lastDate = lastDate.AddDays(1);
                     chartData.Dates.Add(lastDate);
@@ -216,22 +155,20 @@ namespace Invest.Controllers
         }
 
         [NonAction]
-        public static StockPrediction? ForecastTimeSeries(List<Stock> stocks, int horizon)
+        public static StockForecast? ForecastStocks(List<Stock> stocks, int forecastHorizon)
         {
-            var mlContext = new MLContext();
-            IDataView data = mlContext.Data.LoadFromEnumerable(stocks);
-
-            var model = mlContext.Forecasting.ForecastBySsa(
+            IDataView data = AlgorithmController.mlContext.Data.LoadFromEnumerable(stocks);
+            var model = AlgorithmController.mlContext.Forecasting.ForecastBySsa(
                 outputColumnName: "ForecastedPrices",
                 inputColumnName: "Value",
                 windowSize: 7,
                 seriesLength: 30,
                 trainSize: stocks.Count,
-                horizon: horizon,
+                horizon: forecastHorizon,
                 confidenceLevel: 0.95f);
 
             var forecaster = model.Fit(data);
-            var forecastEngine = forecaster.CreateTimeSeriesEngine<Stock, StockPrediction>(mlContext);
+            var forecastEngine = forecaster.CreateTimeSeriesEngine<Stock, StockForecast>(AlgorithmController.mlContext);
             var forecast = forecastEngine.Predict();
             return forecast;
         }

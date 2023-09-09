@@ -1,9 +1,8 @@
-﻿namespace Invest
+﻿namespace Invest.Models
 {
-    public class RecomendData
+    public class RecomendTableData
     {
         public string SecId { get; set; }
-        //public string SecName { get; set; }
         public float LastPrice { get; set; }
         public float ForecastedPrice { get; set; }
         public float Income { get; set; }

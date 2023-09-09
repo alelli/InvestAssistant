@@ -1,4 +1,4 @@
-﻿@model RecomendModel
+﻿@model RecomendView
 @{
     ViewData["Title"] = "Собрать портфель";
     double sharesCosts = 0, sharesSale = 0, sharesIncome = 0, 
@@ -17,6 +17,15 @@
     }
     bondsIncome = bondsSale - bondsCosts;
 }
+@if (Model.BondsList.Count != 0 || Model.SharesList.Count != 0)
+{
+    <style>
+        footer{
+            position: relative;
+        }
+    </style>
+}
+
 <link rel="stylesheet" href="~/css/table.css" asp-append-version="true" />
 
 <div class="params" align="center" width="100%">
@@ -53,7 +62,6 @@
         </table>
       
         <button type="submit" name="setPortfolio" value="1">Сформировать</button>
-    
 <br/>
 
 @if (Model.SharesList.Count > 0)
@@ -97,7 +105,7 @@
                 <td><font color="green"><b>+@Math.Round(sharesIncome, 2)</b></font></td>
             </tr>
         </tbody>
-    </table>
+    </table><br/>
 }
 @if (Model.BondsList.Count > 0)
 {
@@ -140,17 +148,12 @@
                 <td><font color="green"><b>+@Math.Round(bondsIncome, 2)</b></font></td>
             </tr>
         </tbody>
-    </table>
+    </table><br/>
 }
-        @if (Model.BondsList.Count == 0 && Model.SharesList.Count == 0)
-        {
-            <br/><br/><br/><br/><br/><br/>
-        }
     </form>
 </div>
 
 <script>
-    
     function sliderSize() {
       let shares = document.getElementById("shares");
       let bonds = document.getElementById("bonds");
@@ -158,10 +161,5 @@
       shares.value = 100 - slider.value;
       bonds.value = slider.value;
     }
-
     document.addEventListener('DOMContentLoaded', init, false);
-
-    function init() {
-  
-    }
 </script>
